@@ -10,6 +10,10 @@ server:
 # 调大更抗抖动，但点屏幕打断后要多播一会儿才停、每轮说完后也要多等一会儿才开始收音
 tts_audio_prebuffer_count: 10
 
+# 网关语言：en=英文（本 fork 默认；人设、错误/告别回复、退出指令、填充语、Edge 音色自动取英文，
+# 见 config.yaml 里的 language 说明）；zh=中文。写在这里的键会覆盖语言默认值。
+language: en
+
 selected_module:
   VAD: SileroVAD
   ASR: SherpaXASR         # 语音识别：本地 X-ASR 中英混合（sherpa-onnx），不需要联网
@@ -34,11 +38,13 @@ LLM:
     background_max_seconds: 7200    # 打断、断开、单轮超时时 Claude 还在干活就后台接着做，做完进待汇报；最长做多久，0 是打断就停
     background_after_seconds: 30    # 用过工具、或做了这么久才算长任务转后台；更短的聊天被打断直接停
     resume_window_minutes: 120
-    resume_keywords: [接着上次聊, 继续上次的话题, 继续刚才的话题, 接着刚才聊]
-    first_reply_filler: 好的，我看一下
+    resume_keywords: [接着上次聊, 继续上次的话题, 继续刚才的话题, 接着刚才聊, continue from last time, pick up where we left off, carry on from before]
+    # first_reply_filler / progress_reply：不填时按 language 取默认话术
+    # （en："Right, let me have a look" / "Still working on it — one moment"；zh：好的，我看一下 / 还在处理，请稍等）
+    # first_reply_filler: 好的，我看一下
     filler_delay_seconds: 2
     progress_interval_seconds: 30   # 干活时这么久没开口就提示进度，之后间隔逐渐拉长到 4 倍并报已用时间；填 0 关闭
-    progress_reply: 还在处理，请稍等
+    # progress_reply: 还在处理，请稍等
 
   # Claude API（OpenAI 兼容接口），在管理后台填写 API Key 后可切换使用
   ClaudeAPI:

@@ -41,14 +41,17 @@ async def load_config():
     custom_config_path = get_project_dir() + "data/.config.yaml"
 
     # 加载默认配置
-    default_config = read_config(default_config_path)
-    custom_config = read_config(custom_config_path)
+    default_config = read_config(default_config_path) or {}
+    custom_config = read_config(custom_config_path) or {}  # 空文件（刚装好还没填）也算 {}
 
     if custom_config.get("manager-api", {}).get("url"):
         config = await get_config_from_api_async(custom_config)
     else:
         # 合并配置
         config = merge_configs(default_config, custom_config)
+    # [xiaozhi-hub] language=en：填充网关自身话术的英文默认值（用户文件写过的键不动）
+    from core.utils import language
+    language.apply_language_defaults(config, custom_config)
     # 初始化目录
     ensure_directories(config)
 

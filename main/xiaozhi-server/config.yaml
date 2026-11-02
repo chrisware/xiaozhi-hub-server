@@ -98,6 +98,11 @@ enable_websocket_ping: false
 #   > 0: 使用固定延迟（毫秒）发送，例如: 60
 tts_audio_send_delay: 0
 
+# [xiaozhi-hub] 网关语言：en（本分支默认）或 zh。en 时人设、错误/告别回复、退出指令、
+# 填充语、Edge 音色等取 core/utils/language.py 里的英文默认值；用户在 data/.config.yaml
+# 里写过的键不变。zh 时全部保持下面的中文原样。回复语言（{{language}}）也跟着走。
+language: en
+
 exit_commands:
   - "退出"
   - "关闭"

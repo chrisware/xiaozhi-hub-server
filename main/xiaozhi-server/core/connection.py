@@ -784,7 +784,7 @@ class ConnectionHandler:
         try:
             voiceprint_config = self.config.get("voiceprint", {})
             if voiceprint_config:
-                voiceprint_provider = VoiceprintProvider(voiceprint_config)
+                voiceprint_provider = VoiceprintProvider(voiceprint_config, self.config)
                 if voiceprint_provider is not None and voiceprint_provider.enabled:
                     self.voiceprint_provider = voiceprint_provider
                     self.logger.bind(tag=TAG).info("声纹识别功能已在连接时动态启用")
@@ -1176,7 +1176,7 @@ class ConnectionHandler:
             # 避免每轮在 system 重复出现名字诱导模型反复称呼
             speaker_for_system = None
             cs = (self.current_speaker or "").strip()
-            if cs and cs != "未知说话人" and cs not in self.system_introduced_speakers:
+            if cs and cs not in ("未知说话人", "Unknown speaker") and cs not in self.system_introduced_speakers:
                 self.system_introduced_speakers.add(cs)
                 speaker_for_system = cs
 

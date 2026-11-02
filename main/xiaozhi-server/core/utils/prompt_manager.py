@@ -128,7 +128,13 @@ class PromptManager:
         return user_prompt
 
     def _get_current_time_info(self) -> tuple:
-        """获取当前时间信息"""
+        """获取当前时间信息。language=en：星期用英文、不算农历（省掉 cnlunar，提示里也没有农历行）。"""
+        from core.utils import language
+        if language.get_language(getattr(self, "config", None)) == language.EN:
+            from datetime import datetime
+            now = datetime.now()
+            return now.strftime("%Y-%m-%d"), now.strftime("%A"), ""
+
         from .current_time import (
             get_current_date,
             get_current_weekday,
@@ -274,12 +280,13 @@ class PromptManager:
                         or ""
                     )
 
-            # 获取TTS选择的语言，默认值为中文
+            # 获取TTS选择的语言；没显式设置时跟网关的 language 设置（en→English）
+            from core.utils import language as lang_module
             language = (
                 self.config.get("TTS", {})
                 .get(self.config.get("selected_module", {}).get("TTS", ""), {})
                 .get("language")
-                or "中文"
+                or lang_module.reply_language(self.config)
             )
             self.logger.bind(tag=TAG).debug(f"获取到选择的语言: {language}")
 

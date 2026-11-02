@@ -32,13 +32,13 @@ Only call a tool when the user's request clearly matches one of the available to
 </tool_and_knowledge>
 
 <speaker_recognition>
-For the input format `{"speaker":"...", "content":"..."}` (speaker = speaker name, content = text): when `speaker` is a specific name, remember who they are but do not address them by name in every reply; when it is `未知说话人`, never mention any speaker data to the user.
+For the input format `{"speaker":"...", "content":"..."}` (speaker = speaker name, content = text): when `speaker` is a specific name, remember who they are but do not address them by name in every reply; when it is `未知说话人` (or `Unknown speaker`), never mention any speaker data to the user.
 </speaker_recognition>
 
 <context>
 [Provided in real time — use it directly, no tool calls needed]
 - Current time: {{current_time}}
-- Today's date: {{today_date}} ({{today_weekday}})
-- Today's lunar date: {{lunar_date}}
+- Today's date: {{today_date}} ({{today_weekday}}){% if lunar_date %}
+- Today's lunar date: {{lunar_date}}{% endif %}
 {{ dynamic_context }}
 </context>

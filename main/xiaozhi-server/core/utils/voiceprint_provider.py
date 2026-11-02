@@ -5,6 +5,9 @@ import requests
 from urllib.parse import urlparse, parse_qs
 from typing import Optional, Dict
 from config.logger import setup_logging
+
+# [xiaozhi-hub] 两种语言的"未知说话人"标签；比较处用 not in UNKNOWN_SPEAKERS
+UNKNOWN_SPEAKERS = ("未知说话人", "Unknown speaker")
 from core.utils.cache.manager import cache_manager
 from core.utils.cache.config import CacheType
 
@@ -15,7 +18,10 @@ logger = setup_logging()
 class VoiceprintProvider:
     """声纹识别服务提供者"""
     
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, hub_config=None):
+        from core.utils import language
+        # [xiaozhi-hub] "未知说话人"标签按网关语言；UNKNOWN_SPEAKERS 供比较处使用
+        self.unknown_speaker = language.msg(hub_config, "Unknown speaker", "未知说话人")
         self.original_url = config.get("url", "")
         self.speakers = config.get("speakers", [])
         self.speaker_map = self._parse_speakers()
@@ -174,7 +180,7 @@ class VoiceprintProvider:
                         # 相似度阈值检查
                         if score < self.similarity_threshold:
                             logger.bind(tag=TAG).warning(f"声纹识别相似度{score:.3f}低于阈值{self.similarity_threshold}")
-                            return "未知说话人"
+                            return self.unknown_speaker
                         
                         if speaker_id and speaker_id in self.speaker_map:
                             result_name = self.speaker_map[speaker_id]["name"]
@@ -182,7 +188,7 @@ class VoiceprintProvider:
                             return result_name
                         else:
                             logger.bind(tag=TAG).warning(f"未识别的说话人ID: {speaker_id}")
-                            return "未知说话人"
+                            return self.unknown_speaker
                     else:
                         logger.bind(tag=TAG).error(f"声纹识别API错误: HTTP {response.status}")
                         return None
