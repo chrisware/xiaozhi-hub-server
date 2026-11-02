@@ -85,7 +85,7 @@ Before you begin: the computer and the device must be on the same LAN, and git m
 **macOS / Linux**, in a terminal:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/justhalfbit/xiaozhi-hub-server/main/scripts/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/chrisware/xiaozhi-hub-server/english/image-from-forks/scripts/bootstrap.sh | bash
 ```
 
 It installs to `~/xiaozhi-hub-server` and, at the end, asks whether to start the server at login (press Enter to accept). On macOS, missing ffmpeg and opus are installed with [Homebrew](https://brew.sh), so install Homebrew first in that case.
@@ -93,7 +93,7 @@ It installs to `~/xiaozhi-hub-server` and, at the end, asks whether to start the
 **Windows 10 / 11**, in PowerShell:
 
 ```powershell
-git clone --depth 1 https://github.com/justhalfbit/xiaozhi-hub-server.git
+git clone --depth 1 -b english/image-from-forks https://github.com/chrisware/xiaozhi-hub-server.git
 cd xiaozhi-hub-server
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1   # install
 powershell -ExecutionPolicy Bypass -File scripts\start.ps1     # start

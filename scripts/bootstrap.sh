@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 # xiaozhi-hub-server 远程一键安装（macOS / Linux）
-# 用法：curl -fsSL https://raw.githubusercontent.com/justhalfbit/xiaozhi-hub-server/main/scripts/bootstrap.sh | bash
+# 用法：curl -fsSL https://raw.githubusercontent.com/chrisware/xiaozhi-hub-server/english/image-from-forks/scripts/bootstrap.sh | bash
 #   下载代码到 ~/xiaozhi-hub-server（只下载运行需要的目录），然后运行 scripts/install.sh。
 #   已经装过时，改为运行 scripts/update.sh 更新。
 # 可选环境变量：
 #   XIAOZHI_HUB_DIR     安装目录，默认 ~/xiaozhi-hub-server
-#   XIAOZHI_HUB_REPO    仓库地址，默认 https://github.com/justhalfbit/xiaozhi-hub-server.git
-#   XIAOZHI_HUB_BRANCH  分支，默认 main
+#   XIAOZHI_HUB_REPO    仓库地址，默认 https://github.com/chrisware/xiaozhi-hub-server.git（英文分叉；上游用 justhalfbit/*）
+#   XIAOZHI_HUB_BRANCH  分支，默认 english/image-from-forks（并入 main 后改回 main）
 #   以及 install.sh 支持的 UV_INDEX_URL、HF_ENDPOINT、ASSUME_YES
 set -euo pipefail
 
 # 整个脚本放在函数里、最后一行才调用：curl 下载中断时，bash 不会执行半截脚本
 main() {
   local dir="${XIAOZHI_HUB_DIR:-$HOME/xiaozhi-hub-server}"
-  local repo="${XIAOZHI_HUB_REPO:-https://github.com/justhalfbit/xiaozhi-hub-server.git}"
-  local branch="${XIAOZHI_HUB_BRANCH:-main}"
+  local repo="${XIAOZHI_HUB_REPO:-https://github.com/chrisware/xiaozhi-hub-server.git}"
+  local branch="${XIAOZHI_HUB_BRANCH:-english/image-from-forks}"
   # 只检出运行需要的目录（根目录的文件总会检出）。改动时 update.sh 里的 SPARSE_PATHS 要一起改
   local sparse_paths=(main/xiaozhi-server scripts hub-docs)
 

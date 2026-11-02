@@ -70,7 +70,7 @@
 **macOS / Linux**，在终端运行：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/justhalfbit/xiaozhi-hub-server/main/scripts/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/chrisware/xiaozhi-hub-server/english/image-from-forks/scripts/bootstrap.sh | bash
 ```
 
 代码装到 `~/xiaozhi-hub-server`，结束时询问是否开机自启（直接回车就是开启）。macOS 缺 ffmpeg、opus 时会用 [Homebrew](https://brew.sh) 安装，这种情况要先装好 Homebrew。
@@ -78,7 +78,7 @@ curl -fsSL https://raw.githubusercontent.com/justhalfbit/xiaozhi-hub-server/main
 **Windows 10 / 11**，在 PowerShell 里运行：
 
 ```powershell
-git clone --depth 1 https://github.com/justhalfbit/xiaozhi-hub-server.git
+git clone --depth 1 -b english/image-from-forks https://github.com/chrisware/xiaozhi-hub-server.git
 cd xiaozhi-hub-server
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1   # 安装
 powershell -ExecutionPolicy Bypass -File scripts\start.ps1     # 启动
