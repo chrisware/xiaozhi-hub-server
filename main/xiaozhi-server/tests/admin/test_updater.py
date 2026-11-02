@@ -92,7 +92,9 @@ def publish(seed: Path, subject: str, files: dict = None) -> str:
 
 
 def make_updater(install: Path) -> updater.Updater:
-    return updater.Updater(install, state_dir=install / "main" / "xiaozhi-server" / "tmp")
+    # language=zh：本文件的断言看中文文案；英文文案由 Updater 的双语实现保证
+    return updater.Updater(install, state_dir=install / "main" / "xiaozhi-server" / "tmp",
+                           config={"language": "zh"})
 
 
 def wait_done(u: updater.Updater, timeout=30) -> dict:

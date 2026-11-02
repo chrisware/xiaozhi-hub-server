@@ -102,11 +102,22 @@ EDGE_VOICES = [
     {"value": "zh-TW-HsiaoChenNeural", "name": "曉臻", "gender": "女", "style": "友好", "group": "台湾"},
     {"value": "zh-TW-HsiaoYuNeural", "name": "曉雨", "gender": "女", "style": "友好", "group": "台湾"},
     {"value": "zh-TW-YunJheNeural", "name": "雲哲", "gender": "男", "style": "友好", "group": "台湾"},
+    # 英文音色：页面直接显示英文字段值，zh 条目的 group 在 pages.py 渲染处按后台语言翻译
+    {"value": "en-NZ-MollyNeural", "name": "Molly", "gender": "female", "style": "warm",
+     "group": "New Zealand English"},
+    {"value": "en-NZ-MitchellNeural", "name": "Mitchell", "gender": "male", "style": "relaxed",
+     "group": "New Zealand English"},
+    {"value": "en-US-AriaNeural", "name": "Aria", "gender": "female", "style": "expressive, confident",
+     "group": "American English"},
+    {"value": "en-US-GuyNeural", "name": "Guy", "gender": "male", "style": "calm, confident",
+     "group": "American English"},
 ]
 EDGE_VOICE_VALUES = {v["value"] for v in EDGE_VOICES}
 VOICE_SAMPLE = {
     "普通话": "你好，今天想聊点什么？",
     "粤语": "你好，今日想傾啲乜嘢？",
+    "New Zealand English": "Hello, what can I help you with?",
+    "American English": "Hello, what can I help you with?",
 }
 
 
@@ -140,10 +151,22 @@ PLUGINS = [
 PLUGIN_NAMES = {p["name"] for p in PLUGINS}
 INTENT_MODES = ("nointent", "function_call")
 
+# ---------- 界面语言 ----------
+# 选项的 label 永远用该语言自称，不随后台语言变化
+LANGUAGES = [{"value": "en", "label": "English"}, {"value": "zh", "label": "中文"}]
+
 # ---------- 情绪（表情测试） ----------
 EMOTION_LABELS = {
     "neutral": "平静", "happy": "开心", "laughing": "大笑", "funny": "搞笑", "sad": "难过", "angry": "生气",
     "crying": "哭泣", "loving": "喜爱", "embarrassed": "尴尬", "surprised": "惊讶", "shocked": "震惊",
     "thinking": "思考", "winking": "眨眼", "cool": "酷", "relaxed": "放松", "delicious": "好吃",
     "kissy": "亲亲", "confident": "自信", "sleepy": "困", "silly": "傻乐", "confused": "困惑",
+}
+# 后台语言为英文时用的表情名（渲染处按 language.msg 挑选，zh 条目不变）
+EMOTION_LABELS_EN = {
+    "neutral": "Calm", "happy": "Happy", "laughing": "Laughing", "funny": "Funny", "sad": "Sad",
+    "angry": "Angry", "crying": "Crying", "loving": "Loving", "embarrassed": "Embarrassed",
+    "surprised": "Surprised", "shocked": "Shocked", "thinking": "Thinking", "winking": "Winking",
+    "cool": "Cool", "relaxed": "Relaxed", "delicious": "Yummy", "kissy": "Kissy", "confident": "Confident",
+    "sleepy": "Sleepy", "silly": "Goofy", "confused": "Confused",
 }

@@ -12,6 +12,7 @@ from core.admin import config_store, connections, pipeline
 from core.admin.admin_handler import AdminHandler
 
 CLI_YAML = """\
+language: zh
 selected_module:
   LLM: ClaudeCLI
   Intent: nointent
@@ -28,6 +29,7 @@ LLM:
 """
 
 API_YAML = """\
+language: zh
 selected_module:
   LLM: DeepSeekLLM
   Intent: function_call

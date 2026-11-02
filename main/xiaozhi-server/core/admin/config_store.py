@@ -93,7 +93,11 @@ def save_custom(data: CommentedMap, path: Path = None) -> None:
 def load_merged(default_path: Path = None, custom_path: Path = None) -> dict:
     default = read_config(str(default_path or default_config_path())) or {}
     custom = read_config(str(custom_path or custom_config_path())) or {}
-    return merge_configs(default, custom)
+    merged = merge_configs(default, custom)
+    # [xiaozhi-hub] 后台预览要和运行时一致：同样按 language 填英文默认值
+    from core.utils import language
+    language.apply_language_defaults(merged, custom)
+    return merged
 
 
 def is_placeholder(value) -> bool:

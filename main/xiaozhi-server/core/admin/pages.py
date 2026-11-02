@@ -13,6 +13,7 @@ from ruamel.yaml.comments import CommentedMap, CommentedSeq
 from config.config_loader import get_project_dir
 from core.admin import catalog, config_store
 from core.agent import asr_text
+from core.utils import language
 
 CLAUDE_CLI_ENTRY = "ClaudeCLI"
 CLAUDE_EFFORT_VALUES = {"", "low", "medium", "high", "xhigh", "max"}
@@ -190,14 +191,14 @@ def save_grok_bots(payload: dict, merged: dict, path: Path = None) -> list:
 
     raw = payload.get("bots")
     if not isinstance(raw, list):
-        raise ValueError("Bot 列表格式不对")
+        raise ValueError(language.msg(merged, "Malformed Bot list", "Bot 列表格式不对"))
     wanted = {}
     for item in raw:
         if not isinstance(item, dict):
-            raise ValueError("Bot 列表格式不对")
+            raise ValueError(language.msg(merged, "Malformed Bot list", "Bot 列表格式不对"))
         bot_id = str(item.get("id") or "").strip()
         if not bot_id:
-            raise ValueError("Bot 缺少 id")
+            raise ValueError(language.msg(merged, "A Bot entry is missing its id", "Bot 缺少 id"))
         wanted[bot_id] = str(item.get("name") or "").strip() or bot_id[:8]
     current = {g["bot_id"]: g for g in grok_entries(merged)}
     taken = {g["entry"]: g["bot_id"] for g in grok_entries(merged)}
@@ -237,7 +238,10 @@ def save_grok_bots(payload: dict, merged: dict, path: Path = None) -> list:
             if bot_id in wanted:
                 continue
             if old["entry"] == selected:
-                raise ValueError(f"{old['bot_name']} 正在作为默认模型使用，先到“大模型”页换掉再取消")
+                raise ValueError(language.msg(
+                    merged, f"{old['bot_name']} is the current default model — switch to another one on the "
+                            "Models page before unchecking it",
+                    f"{old['bot_name']} 正在作为默认模型使用，先到“大模型”页换掉再取消"))
             llm.pop(old["entry"], None)
             models = (data.get("call_names") or {}).get("models")
             if isinstance(models, dict):
@@ -246,20 +250,22 @@ def save_grok_bots(payload: dict, merged: dict, path: Path = None) -> list:
     return changed
 
 
-def _check_positive_number(name: str, raw) -> None:
+def _check_positive_number(name: str, raw, merged: dict = None) -> None:
     try:
         if float(str(raw).strip()) <= 0:
             raise ValueError
     except ValueError:
-        raise ValueError(f"{name} 需要是大于 0 的数字")
+        raise ValueError(language.msg(merged, f"{name} must be a number greater than 0",
+                                      f"{name} 需要是大于 0 的数字"))
 
 
-def _check_non_negative_number(name: str, raw) -> None:
+def _check_non_negative_number(name: str, raw, merged: dict = None) -> None:
     try:
         if float(str(raw).strip()) < 0:
             raise ValueError
     except ValueError:
-        raise ValueError(f"{name} 需要是 0 或正数")
+        raise ValueError(language.msg(merged, f"{name} must be 0 or a positive number",
+                                      f"{name} 需要是 0 或正数"))
 
 
 def save_claude_cli(payload: dict, merged: dict, path: Path = None) -> list:
@@ -278,43 +284,51 @@ def save_claude_cli(payload: dict, merged: dict, path: Path = None) -> list:
         else:
             level = catalog.CLAUDE_LEVEL_BY_VALUE.get(level_value)
             if level is None:
-                raise ValueError("权限级别只能是 只读、可编辑、Auto")
+                raise ValueError(language.msg(merged, "Permission level must be read-only, editable or Auto",
+                                              "权限级别只能是 只读、可编辑、Auto"))
             tools, mode = list(level["tools"]), level["mode"]
         payload["allowed_tools"] = tools + (catalog.CLAUDE_WEB_TOOLS if web else [])
         payload["permission_mode"] = mode
     if "model" in payload:
         model = str(payload["model"] or "").strip()
         if model and not re.fullmatch(r"[\w.\-\[\]]+", model):
-            raise ValueError("模型名称只能包含字母、数字、点和横线，例如 haiku 或 claude-sonnet-5-5")
+            raise ValueError(language.msg(
+                merged, "Model names may only contain letters, digits, dots and dashes, e.g. haiku or "
+                        "claude-sonnet-5-5",
+                "模型名称只能包含字母、数字、点和横线，例如 haiku 或 claude-sonnet-5-5"))
     if "effort" in payload and str(payload["effort"] or "").strip() not in CLAUDE_EFFORT_VALUES:
-        raise ValueError("思考力度只能是 低、中、高、超高、最高")
+        raise ValueError(language.msg(merged, "Thinking effort must be low, medium, high, xhigh or max",
+                                      "思考力度只能是 低、中、高、超高、最高"))
     if "permission_mode" in payload and str(payload["permission_mode"] or "").strip() not in CLAUDE_PERMISSION_VALUES:
-        raise ValueError("权限模式不支持这个值")
+        raise ValueError(language.msg(merged, "Unsupported permission mode", "权限模式不支持这个值"))
     if "workdir" in payload and not str(payload["workdir"] or "").strip():
-        raise ValueError("工作目录不能为空")
+        raise ValueError(language.msg(merged, "The working directory cannot be empty", "工作目录不能为空"))
     if "allowed_tools" in payload:
         tools = payload["allowed_tools"]
         items = tools if isinstance(tools, list) else re.split(r"[,，\s]+", str(tools))
         items = [str(t).strip() for t in items if str(t).strip()]
         bad = [t for t in items if not TOOL_NAME.match(t)]
         if bad:
-            raise ValueError(f"工具名不对：{', '.join(bad)}")
+            raise ValueError(language.msg(merged, f"Bad tool names: {', '.join(bad)}",
+                                          f"工具名不对：{', '.join(bad)}"))
         payload["allowed_tools"] = items
     # 这几项填 0 有特别含义（见 claude_cli.py）：单轮、无响应超时 0 是不限制，空闲关闭 0 是每轮结束就关进程，
     # 自动接续 0 是不自动接续，后台最长 0 是不转后台（打断就停）
     for name in ("turn_timeout_seconds", "stall_timeout_seconds", "idle_timeout_seconds", "resume_window_minutes",
                  "background_max_seconds", "background_after_seconds"):
         if name in payload:
-            _check_non_negative_number(name, payload[name])
+            _check_non_negative_number(name, payload[name], merged)
     if "filler_delay_seconds" in payload:
-        _check_positive_number("filler_delay_seconds", payload["filler_delay_seconds"])
+        _check_positive_number("filler_delay_seconds", payload["filler_delay_seconds"], merged)
     raw = str(payload.get("progress_interval_seconds", "")).strip()
     if raw:  # 留空表示用默认值，0 表示关闭进度提示
         try:
             if float(raw) < 0:
                 raise ValueError
         except ValueError:
-            raise ValueError("进度提示间隔需要是 0 或正数，0 表示关闭")
+            raise ValueError(language.msg(
+                merged, "The progress-note interval must be 0 or a positive number (0 disables it)",
+                "进度提示间隔需要是 0 或正数，0 表示关闭"))
     return config_store.update_entry("LLM", CLAUDE_CLI_ENTRY, payload, merged, path)
 
 
@@ -325,15 +339,19 @@ def save_vendor(vendor_id: str, payload: dict, merged: dict, path: Path = None) 
         raise KeyError(vendor_id)
     entry = _entry(merged, "LLM", vendor["entry"])
     if entry and entry.get("type") != "openai":
-        raise ValueError(f"配置里的 {vendor['entry']} 不是 OpenAI 兼容类型，请在配置文件里改名或删掉它")
+        raise ValueError(language.msg(
+            merged, f"{vendor['entry']} in the config is not OpenAI-compatible; rename or delete it in the "
+                    "config file",
+            f"配置里的 {vendor['entry']} 不是 OpenAI 兼容类型，请在配置文件里改名或删掉它"))
     payload = payload or {}
     base_url = str(payload.get("base_url") or "").strip()
     model = str(payload.get("model") or "").strip()
     api_key = str(payload.get("api_key") or "").strip()
     if not URL.match(base_url):
-        raise ValueError("接口地址需要以 http:// 或 https:// 开头")
+        raise ValueError(language.msg(merged, "The endpoint URL must start with http:// or https://",
+                                      "接口地址需要以 http:// 或 https:// 开头"))
     if not model:
-        raise ValueError("请填写模型名称")
+        raise ValueError(language.msg(merged, "Please fill in a model name", "请填写模型名称"))
 
     url_field = _url_field(entry)
     changes = {}
@@ -343,7 +361,8 @@ def save_vendor(vendor_id: str, payload: dict, merged: dict, path: Path = None) 
         changes["model_name"] = model
     if api_key:
         if any(c.isspace() for c in api_key):
-            raise ValueError("API Key 里不能有空格或换行")
+            raise ValueError(language.msg(merged, "The API Key cannot contain spaces or newlines",
+                                          "API Key 里不能有空格或换行"))
         if api_key != entry.get("api_key"):
             changes["api_key"] = api_key
     if not entry:
@@ -369,11 +388,12 @@ def vendor_test_config(vendor_id: str, payload: dict, merged: dict) -> dict:
     model = str(payload.get("model") or "").strip() or _text(entry.get("model_name"))
     api_key = str(payload.get("api_key") or "").strip() or _text(entry.get("api_key"))
     if not URL.match(base_url):
-        raise ValueError("接口地址需要以 http:// 或 https:// 开头")
+        raise ValueError(language.msg(merged, "The endpoint URL must start with http:// or https://",
+                                      "接口地址需要以 http:// 或 https:// 开头"))
     if not model:
-        raise ValueError("请填写模型名称")
+        raise ValueError(language.msg(merged, "Please fill in a model name", "请填写模型名称"))
     if not api_key and vendor_id != "custom":
-        raise ValueError("请先填写 API Key")
+        raise ValueError(language.msg(merged, "Please enter an API Key first", "请先填写 API Key"))
     config = {k: v for k, v in entry.items() if k not in ("url", "base_url")}
     config.update({"type": "openai", "base_url": base_url, "model_name": model,
                    "api_key": api_key or "not-needed", "max_tokens": 20, "timeout": 20})
@@ -424,7 +444,7 @@ def _find_model_file(model_dir: Path, name: str):
     return matches[0] if matches else None
 
 
-def asr_model_check(asr_entry: dict):
+def asr_model_check(asr_entry: dict, merged: dict = None):
     """本地 ASR 的模型文件检查；不是本地模型时返回 None。"""
     if asr_entry.get("type") != "sherpa_onnx_local":
         return None
@@ -437,20 +457,21 @@ def asr_model_check(asr_entry: dict):
     if size and not absent:
         detail = f"{model.name} {size // (1024 * 1024)}MB"
     elif absent:
-        detail = f"缺少 {model_dir / absent[0]}"
+        detail = language.msg(merged, f"missing {model_dir / absent[0]}", f"缺少 {model_dir / absent[0]}")
     else:
-        detail = f"{model} 文件不完整"
+        detail = language.msg(merged, f"{model} is incomplete", f"{model} 文件不完整")
     return {"ok": ok, "detail": detail}
 
 
-def asr_label(entry: dict) -> str:
+def asr_label(entry: dict, merged: dict = None) -> str:
     if entry.get("type") != "sherpa_onnx_local":
-        return "云端或其他识别服务"
+        return language.msg(merged, "Cloud or another ASR service", "云端或其他识别服务")
     model_type = entry.get("model_type") or "sense_voice"
     name = SHERPA_MODEL_LABELS.get(model_type, model_type)
     if "x-asr" in str(entry.get("model_dir") or "").lower():
-        name = "X-ASR 中英混合"
-    return f"本地识别 · {name}（sherpa-onnx），不需要联网"
+        name = language.msg(merged, "X-ASR (Chinese + English)", "X-ASR 中英混合")
+    return language.msg(merged, f"Local ASR · {name} (sherpa-onnx), works offline",
+                        f"本地识别 · {name}（sherpa-onnx），不需要联网")
 
 
 def asr_choice(merged: dict) -> str:
@@ -467,18 +488,20 @@ def asr_choice(merged: dict) -> str:
 def describe_asr(merged: dict) -> dict:
     name = _selected(merged, "ASR")
     entry = _entry(merged, "ASR", name)
-    info = [{"label": "模型目录", "value": str(entry.get("model_dir") or "")}] if entry.get("model_dir") else []
+    info = [{"label": language.msg(merged, "Model folder", "模型目录"),
+             "value": str(entry.get("model_dir") or "")}] if entry.get("model_dir") else []
     if entry.get("model_type"):
-        info.append({"label": "模型类型", "value": str(entry["model_type"])})
+        info.append({"label": language.msg(merged, "Model type", "模型类型"),
+                     "value": str(entry["model_type"])})
     local = _entry(merged, "ASR", catalog.LOCAL_ASR_ENTRY)
     return {
         "selected": name,
-        "label": asr_label(entry),
+        "label": asr_label(entry, merged),
         "info": info,
-        "model": asr_model_check(entry),
+        "model": asr_model_check(entry, merged),
         "choice": asr_choice(merged),
-        "local": {"exists": local.get("type") == "sherpa_onnx_local", "label": asr_label(local),
-                  "model": asr_model_check(local)},
+        "local": {"exists": local.get("type") == "sherpa_onnx_local", "label": asr_label(local, merged),
+                  "model": asr_model_check(local, merged)},
         "doubao": describe_doubao(merged),
         "vad": describe_vad(merged),
         "hotwords": describe_hotwords(merged),
@@ -512,30 +535,34 @@ def describe_doubao(merged: dict) -> dict:
     }
 
 
-def _doubao_values(payload: dict, entry: dict) -> dict:
+def _doubao_values(payload: dict, entry: dict, merged: dict = None) -> dict:
     """校验页面提交的值，返回 {auth, api_key, appid, access_token, resource_id}；密钥留空时用已保存的。"""
     payload = payload or {}
     auth = str(payload.get("auth") or "key")
     if auth not in ("key", "app"):
-        raise ValueError("鉴权方式只能是 API Key 或 APP ID + Access Token")
+        raise ValueError(language.msg(
+            merged, "Authentication must be API Key or APP ID + Access Token",
+            "鉴权方式只能是 API Key 或 APP ID + Access Token"))
     resource = (str(payload.get("resource_id") or "").strip() or _text(entry.get("resource_id"))
                 or catalog.DOUBAO_RESOURCES[0]["value"])
     if resource not in catalog.DOUBAO_RESOURCE_VALUES:
-        raise ValueError("不支持这个资源 ID")
+        raise ValueError(language.msg(merged, "Unsupported resource ID", "不支持这个资源 ID"))
     values = {"auth": auth, "resource_id": resource}
     for field, label in (("api_key", "API Key"), ("access_token", "Access Token")):
         raw = str(payload.get(field) or "").strip()
         if any(c.isspace() for c in raw):
-            raise ValueError(f"{label} 里不能有空格或换行")
+            raise ValueError(language.msg(merged, f"The {label} cannot contain spaces or newlines",
+                                          f"{label} 里不能有空格或换行"))
         values[field] = raw or _text(entry.get(field))
     values["appid"] = str(payload.get("appid") or "").strip() or _text(entry.get("appid"))
     if auth == "key" and not values["api_key"]:
-        raise ValueError("请填写 API Key")
+        raise ValueError(language.msg(merged, "Please enter an API Key", "请填写 API Key"))
     if auth == "app":
         if not re.fullmatch(r"[A-Za-z0-9]+", values["appid"]):
-            raise ValueError("请填写 APP ID（只有字母和数字）")
+            raise ValueError(language.msg(merged, "Please enter the APP ID (letters and digits only)",
+                                          "请填写 APP ID（只有字母和数字）"))
         if not values["access_token"]:
-            raise ValueError("请填写 Access Token")
+            raise ValueError(language.msg(merged, "Please enter the Access Token", "请填写 Access Token"))
     return values
 
 
@@ -543,8 +570,11 @@ def save_doubao(payload: dict, merged: dict, path: Path = None) -> list:
     """保存豆包的鉴权和资源 ID，返回修改的字段。用 APP ID 鉴权时清掉 API Key（有 API Key 时优先用它）。"""
     entry = _entry(merged, "ASR", catalog.DOUBAO_ASR_ENTRY)
     if entry and entry.get("type") != "doubao_stream":
-        raise ValueError(f"配置里的 {catalog.DOUBAO_ASR_ENTRY} 不是豆包流式识别，请在配置文件里改名或删掉它")
-    values = _doubao_values(payload, entry)
+        raise ValueError(language.msg(
+            merged, f"{catalog.DOUBAO_ASR_ENTRY} in the config is not Doubao streaming ASR; rename or delete "
+                    "it in the config file",
+            f"配置里的 {catalog.DOUBAO_ASR_ENTRY} 不是豆包流式识别，请在配置文件里改名或删掉它"))
+    values = _doubao_values(payload, entry, merged)
     wanted = {"resource_id": values["resource_id"]}
     if values["auth"] == "key":
         wanted["api_key"] = values["api_key"]
@@ -566,7 +596,7 @@ def save_doubao(payload: dict, merged: dict, path: Path = None) -> list:
 def doubao_test_config(payload: dict, merged: dict) -> dict:
     """测试连接用的配置：页面上还没保存的值优先。"""
     entry = _entry(merged, "ASR", catalog.DOUBAO_ASR_ENTRY)
-    values = _doubao_values(payload, entry)
+    values = _doubao_values(payload, entry, merged)
     config = {k: v for k, v in entry.items() if k != "type"}
     config.update(resource_id=values["resource_id"], api_key=values["api_key"] if values["auth"] == "key" else "",
                   appid=values["appid"], access_token=values["access_token"])
@@ -599,20 +629,26 @@ def describe_hotwords(merged: dict) -> dict:
 def save_hotwords(words, merged: dict, path: Path = None) -> list:
     """把热词整个写进 data/.config.yaml 的 asr_hotwords，同时删掉旧版本存在识别条目里的。返回修改的字段。"""
     if not hotwords_supported(_entry(merged, "ASR", _selected(merged, "ASR"))):
-        raise ValueError("当前语音识别不支持热词（支持的有 X-ASR、豆包流式语音识别）")
+        raise ValueError(language.msg(
+            merged, "The current speech recognition doesn't support hotwords (X-ASR and Doubao streaming ASR do)",
+            "当前语音识别不支持热词（支持的有 X-ASR、豆包流式语音识别）"))
     if not isinstance(words, list):
-        raise ValueError("热词格式不对")
+        raise ValueError(language.msg(merged, "Hotword list format is wrong", "热词格式不对"))
     result = []
     for w in words:
         w = re.sub(r"\s+", " ", str(w)).strip()
         if not w:
             continue
         if HOTWORD_BAD.search(w) or len(w) > 40:
-            raise ValueError(f"热词“{w}”不能包含逗号或换行，长度不超过 40 个字")
+            raise ValueError(language.msg(
+                merged, f'Hotword "{w}" cannot contain commas or newlines, and must be at most 40 characters',
+                f"热词“{w}”不能包含逗号或换行，长度不超过 40 个字"))
         if w.lower() not in {x.lower() for x in result}:
             result.append(w)
     if len(result) > HOTWORD_MAX:
-        raise ValueError(f"热词最多 {HOTWORD_MAX} 个；太多会让识别变慢，也更容易误认")
+        raise ValueError(language.msg(
+            merged, f"At most {HOTWORD_MAX} hotwords; too many slow recognition down and cause false matches",
+            f"热词最多 {HOTWORD_MAX} 个；太多会让识别变慢，也更容易误认"))
     if result == asr_text.hotwords_of(merged) and "asr_hotwords" in merged:
         return []
     with config_store.edit_custom(path) as data:
@@ -633,7 +669,7 @@ def describe_corrections(merged: dict) -> list:
 def save_corrections(items, merged: dict, path: Path = None) -> list:
     """校验后把替换表整个写进 data/.config.yaml 的 asr_corrections。返回修改的字段。"""
     if not isinstance(items, list):
-        raise ValueError("替换表格式不对")
+        raise ValueError(language.msg(merged, "Replacement list format is wrong", "替换表格式不对"))
     table, owner = {}, {}
     for item in items:
         target = re.sub(r"\s+", " ", str((item or {}).get("target") or "")).strip()
@@ -641,23 +677,34 @@ def save_corrections(items, merged: dict, path: Path = None) -> list:
         if not target and not aliases:
             continue
         if not target:
-            raise ValueError(f"“{aliases[0]}”要改成什么？请填写正确写法")
+            raise ValueError(language.msg(
+                merged, f'What should "{aliases[0]}" be corrected to? Please fill in the correct form',
+                f"“{aliases[0]}”要改成什么？请填写正确写法"))
         if len(target) > 40:
-            raise ValueError(f"正确写法“{target}”太长了，不超过 40 个字")
+            raise ValueError(language.msg(
+                merged, f'The correct form "{target}" is too long — keep it within 40 characters',
+                f"正确写法“{target}”太长了，不超过 40 个字"))
         clean = []
         for a in aliases:
             if len(a) < 2 or len(a) > 40:
-                raise ValueError(f"认错的写法“{a}”需要 2～40 个字；太短容易误改普通的话")
+                raise ValueError(language.msg(
+                    merged, f'The misrecognized form "{a}" needs 2–40 characters; too short risks changing '
+                            "ordinary speech",
+                    f"认错的写法“{a}”需要 2～40 个字；太短容易误改普通的话"))
             if a.lower() == target.lower():
                 continue  # 和正确写法一样，不用替换
             other = owner.get(a.lower())
             if other and other != target:
-                raise ValueError(f"“{a}”同时要改成“{other}”和“{target}”，只能保留一个")
+                raise ValueError(language.msg(
+                    merged, f'"{a}" maps to both "{other}" and "{target}"; keep only one',
+                    f"“{a}”同时要改成“{other}”和“{target}”，只能保留一个"))
             owner[a.lower()] = target
             if a.lower() not in {x.lower() for x in clean}:
                 clean.append(a)
         if not clean:
-            raise ValueError(f"“{target}”还没有认错的写法")
+            raise ValueError(language.msg(
+                merged, f'"{target}" has no misrecognized forms to replace',
+                f"“{target}”还没有认错的写法"))
         table.setdefault(target, [])
         table[target] += [a for a in clean if a.lower() not in {x.lower() for x in table[target]}]
     if table == {t: list(v) for t, v in asr_text.corrections_of(merged).items()}:
@@ -693,14 +740,18 @@ def save_vad_silence(raw, merged: dict, path: Path = None):
     name = _selected(merged, "VAD")
     entry = _entry(merged, "VAD", name)
     if entry.get("type") != "silero":
-        raise ValueError("当前语音检测不是 SileroVAD，后台只支持设置 SileroVAD 的停顿时长")
+        raise ValueError(language.msg(
+            merged, "The current voice detector isn't SileroVAD; only SileroVAD's pause length can be set here",
+            "当前语音检测不是 SileroVAD，后台只支持设置 SileroVAD 的停顿时长"))
     low, high = VAD_SILENCE_RANGE
     try:
         value = int(str(raw).strip())
         if not low <= value <= high:
             raise ValueError
     except ValueError:
-        raise ValueError(f"停顿时长需要是 {low}～{high} 之间的整数（毫秒）")
+        raise ValueError(language.msg(merged, f"The pause length must be a whole number between {low} and "
+                                              f"{high} (milliseconds)",
+                                      f"停顿时长需要是 {low}～{high} 之间的整数（毫秒）"))
     if value == entry.get(VAD_SILENCE_FIELD):
         return None
     with config_store.edit_custom(path) as data:
@@ -710,23 +761,36 @@ def save_vad_silence(raw, merged: dict, path: Path = None):
 
 # ---------- 语音合成 ----------
 
+# 中文音色的分组名按后台语言显示；英文音色的分组本来就是英文，直接透出
+VOICE_GROUP_EN = {"普通话": "Mandarin", "方言：东北话": "Dialect: Northeastern",
+                  "方言：陕西话": "Dialect: Shaanxi", "粤语": "Cantonese", "台湾": "Taiwan"}
+
+
+def voice_group_label(group: str, merged: dict) -> str:
+    return language.msg(merged, VOICE_GROUP_EN.get(group, group), group)
+
+
 def describe_tts(merged: dict) -> dict:
     name = _selected(merged, "TTS")
     entry = _entry(merged, "TTS", name)
+    voices = [v if language.get_language(merged) == "zh" else {**v, "group": voice_group_label(v["group"], merged)}
+              for v in catalog.EDGE_VOICES]
     return {
         "selected": name,
         "type": entry.get("type", name),
         "voice": str(entry.get("voice") or ""),
-        "voices": catalog.EDGE_VOICES,
+        "voices": voices,
     }
 
 
 def save_tts_voice(voice: str, merged: dict, path: Path = None) -> list:
     name = _selected(merged, "TTS")
     if _entry(merged, "TTS", name).get("type") != "edge":
-        raise ValueError("当前语音合成不是 EdgeTTS，后台只支持设置 EdgeTTS 的音色")
+        raise ValueError(language.msg(
+            merged, "The current speech synthesis isn't EdgeTTS; only EdgeTTS voices can be set here",
+            "当前语音合成不是 EdgeTTS，后台只支持设置 EdgeTTS 的音色"))
     if voice not in catalog.EDGE_VOICE_VALUES:
-        raise ValueError("不支持这个音色")
+        raise ValueError(language.msg(merged, "Unknown voice", "不支持这个音色"))
     return config_store.update_entry("TTS", name, {"voice": voice}, merged, path)
 
 
@@ -768,10 +832,11 @@ def intent_entry_name(merged: dict, mode: str) -> str:
 def save_intent_plugins(functions: list, merged: dict, path: Path = None) -> list:
     """保存 function_call 的插件列表。后台不认识的插件（用户手动加的）原样保留。"""
     if not isinstance(functions, list):
-        raise ValueError("插件列表格式不对")
+        raise ValueError(language.msg(merged, "Plugin list format is wrong", "插件列表格式不对"))
     unknown = [f for f in functions if f not in catalog.PLUGIN_NAMES]
     if unknown:
-        raise ValueError(f"不认识的插件：{', '.join(map(str, unknown))}")
+        raise ValueError(language.msg(merged, f"Unknown plugins: {', '.join(map(str, unknown))}",
+                                      f"不认识的插件：{', '.join(map(str, unknown))}"))
     name = intent_entry_name(merged, "function_call")
     current = [str(f) for f in _entry(merged, "Intent", name).get("functions") or []]
     wanted = [p["name"] for p in catalog.PLUGINS if p["name"] in functions]
@@ -806,15 +871,20 @@ def call_targets(merged: dict) -> list:
 
     result = []
     if config_store.entry_type(merged, "LLM", CLAUDE_CLI_ENTRY) == "claude_cli":
-        result.append({"entry": CLAUDE_CLI_ENTRY, "label": "Claude（本机 Claude Code）",
+        result.append({"entry": CLAUDE_CLI_ENTRY,
+                       "label": language.msg(merged, "Claude (local Claude Code)", "Claude（本机 Claude Code）"),
                        "defaults": list(call_names.DEFAULT_MODELS[CLAUDE_CLI_ENTRY])})
     for g in grok_entries(merged):
         if g["bot_id"]:
-            result.append({"entry": g["entry"], "label": f"{g['bot_name']}（Grok Bot）",
+            result.append({"entry": g["entry"],
+                           "label": language.msg(merged, f"{g['bot_name']} (Grok Bot)",
+                                                 f"{g['bot_name']}（Grok Bot）"),
                            "defaults": [g["bot_name"].lower()]})
     for vendor in catalog.LLM_VENDORS:
         if describe_vendor(vendor, merged)["configured"]:
-            result.append({"entry": vendor["entry"], "label": f"{vendor['label']}（API）",
+            result.append({"entry": vendor["entry"],
+                           "label": language.msg(merged, f"{vendor['label']} (API)",
+                                                 f"{vendor['label']}（API）"),
                            "defaults": [] if vendor["id"] in ("claude", "custom") else [vendor["id"]]})
     return result
 
@@ -835,7 +905,7 @@ def describe_call_names(merged: dict) -> dict:
                        "ready": t is not None})
     return {
         "enabled": bool(cfg.get("enabled", True)),
-        "reply": str(cfg.get("reply") or call_names.DEFAULT_REPLY),
+        "reply": str(cfg.get("reply") or call_names.default_reply(merged)),
         "models": models,
         "targets": list(targets.values()),
         "default": _selected(merged, "LLM"),
@@ -843,28 +913,36 @@ def describe_call_names(merged: dict) -> dict:
     }
 
 
-def _clean_aliases(raw, label: str, taken: dict) -> list:
+def _clean_aliases(raw, label: str, taken: dict, merged: dict = None) -> list:
     from core.agent import call_names
 
     if not isinstance(raw, list):
-        raise ValueError("称呼格式不对")
+        raise ValueError(language.msg(merged, "Alias list format is wrong", "称呼格式不对"))
     aliases = []
     for item in raw:
         alias = str(item or "").strip().lower()
         if not alias or alias in aliases:
             continue
         if ALIAS_BAD.search(alias):
-            raise ValueError(f"称呼“{alias}”里不能有空格或标点")
+            raise ValueError(language.msg(merged, f'Alias "{alias}" cannot contain spaces or punctuation',
+                                          f"称呼“{alias}”里不能有空格或标点"))
         if not 2 <= len(alias) <= 20:
-            raise ValueError(f"称呼“{alias}”要在 2 到 20 个字之间")
+            raise ValueError(language.msg(merged, f'Alias "{alias}" must be 2–20 characters long',
+                                          f"称呼“{alias}”要在 2 到 20 个字之间"))
         if alias in call_names._PREFIXES:
-            raise ValueError(f"“{alias}”是开头的招呼语，不能当称呼")
+            raise ValueError(language.msg(merged, f'"{alias}" is a greeting prefix and cannot be an alias',
+                                          f"“{alias}”是开头的招呼语，不能当称呼"))
         if alias in taken:
-            raise ValueError(f"称呼“{alias}”同时给了 {taken[alias]} 和 {label}，只能给一个模型")
+            raise ValueError(language.msg(
+                merged, f'Alias "{alias}" is set for both {taken[alias]} and {label}; an alias can only '
+                        "belong to one model",
+                f"称呼“{alias}”同时给了 {taken[alias]} 和 {label}，只能给一个模型"))
         taken[alias] = label
         aliases.append(alias)
     if not aliases:
-        raise ValueError(f"{label} 至少要有一个称呼，不用的话请删掉这个模型")
+        raise ValueError(language.msg(
+            merged, f"{label} needs at least one alias; delete the model instead if you don't want to call it",
+            f"{label} 至少要有一个称呼，不用的话请删掉这个模型"))
     return aliases
 
 
@@ -878,14 +956,15 @@ def save_call_names(payload: dict, merged: dict, path: Path = None) -> list:
 
     current = describe_call_names(merged)
     enabled = bool(payload.get("enabled", current["enabled"]))
-    reply = str(payload.get("reply", current["reply"]) or "").strip() or call_names.DEFAULT_REPLY
+    reply = str(payload.get("reply", current["reply"]) or "").strip() or call_names.default_reply(merged)
     if len(reply) > 40:
-        raise ValueError("回复太长了，请控制在 40 个字以内")
+        raise ValueError(language.msg(merged, "The reply is too long — keep it under 40 characters",
+                                      "回复太长了，请控制在 40 个字以内"))
     raw = payload.get("models")
     if raw is None:
         raw = [{"entry": m["entry"], "aliases": m["aliases"]} for m in current["models"]]
     if not isinstance(raw, list):
-        raise ValueError("模型列表格式不对")
+        raise ValueError(language.msg(merged, "Model list format is wrong", "模型列表格式不对"))
     known = {m["entry"]: m["label"] for m in current["models"]}
     known.update({t["entry"]: t["label"] for t in current["targets"]})
     allowed = {t["entry"] for t in current["targets"]} | {m["entry"] for m in current["models"]}
@@ -893,12 +972,16 @@ def save_call_names(payload: dict, merged: dict, path: Path = None) -> list:
     for item in raw:
         entry = str((item or {}).get("entry") or "") if isinstance(item, dict) else ""
         if entry not in allowed:
-            raise ValueError(f"模型“{entry}”还没配置好，请先到“大模型”页填好再来")
+            raise ValueError(language.msg(
+                merged, f'Model "{entry}" isn\'t set up yet — fill it in on the Models page first',
+                f"模型“{entry}”还没配置好，请先到“大模型”页填好再来"))
         if entry in models:
-            raise ValueError(f"{known[entry]} 重复了")
-        models[entry] = _clean_aliases(item.get("aliases"), known[entry], taken)
+            raise ValueError(language.msg(merged, f"{known[entry]} appears twice",
+                                          f"{known[entry]} 重复了"))
+        models[entry] = _clean_aliases(item.get("aliases"), known[entry], taken, merged)
     if enabled and not models:
-        raise ValueError("至少要给一个模型配称呼")
+        raise ValueError(language.msg(merged, "Give at least one model an alias",
+                                      "至少要给一个模型配称呼"))
 
     old_models = {m["entry"]: m["aliases"] for m in current["models"]}
     changed = [k for k, new, old in (("enabled", enabled, current["enabled"]), ("reply", reply, current["reply"]),
@@ -911,3 +994,30 @@ def save_call_names(payload: dict, merged: dict, path: Path = None) -> list:
         cfg["reply"] = reply
         cfg["models"] = CommentedMap((k, CommentedSeq(v)) for k, v in models.items())
     return changed
+
+
+# ---------- 界面语言 ----------
+
+def describe_language(merged: dict) -> dict:
+    """后台语言设置：value 是当前生效的语言，label 本身按当前语言显示。"""
+    return {"language": {
+        "value": language.get_language(merged),
+        "label": language.msg(merged, "Interface language", "界面语言"),
+        "hint": language.msg(
+            merged, "Switches the console and the text the hub sends. Reopen the page to refresh its language; "
+                    "devices pick up the new wording when they reconnect",
+            "切换后台界面和网关发出的文字。页面重新打开后换界面语言；设备重新连接后用上新文字"),
+        "options": [{"value": o["value"], "label": o["label"]} for o in catalog.LANGUAGES],
+    }}
+
+
+def save_language(payload: dict, merged: dict, path: Path = None) -> list:
+    """把界面语言写进 data/.config.yaml 顶层的 language。返回修改了的项。"""
+    value = str(payload.get("language") or "").strip().lower()
+    if value not in {o["value"] for o in catalog.LANGUAGES}:
+        raise ValueError(language.msg(merged, "Language must be English or 中文", "语言只能选 English 或 中文"))
+    if language.get_language(merged) == value:
+        return []
+    with config_store.edit_custom(path) as data:
+        data["language"] = value
+    return ["language"]

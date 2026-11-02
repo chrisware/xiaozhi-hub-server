@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>小智 Hub 管理后台</title>
+<title data-i18n="title">Xiaozhi Hub Admin</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366f1'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='15' fill='url(%23g)'/%3E%3Crect x='11' y='19' width='42' height='31' rx='10' fill='%23fff'/%3E%3Ccircle cx='24' cy='32' r='5' fill='%234f46e5'/%3E%3Ccircle cx='40' cy='32' r='5' fill='%234f46e5'/%3E%3Cpath d='M27 42h10' stroke='%230891b2' stroke-width='3.5' stroke-linecap='round'/%3E%3Cpath d='M32 19v-7' stroke='%23fff' stroke-width='3.5' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='10' r='4' fill='%23fff'/%3E%3C/svg%3E">
 <style>
   :root {
@@ -36,6 +36,12 @@
           display: flex; flex-direction: column; }
   .brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 600; font-size: 15px; padding: 0 8px 22px; }
   .logo { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #6366f1, #22d3ee);
+  .lang-btn { margin-left: auto; border: 1px solid rgba(255, 255, 255, .28); background: none; color: inherit; border-radius: 6px;
+              padding: 1px 8px; font-size: 12px; font-weight: 500; cursor: pointer; opacity: .85; flex: none; }
+  .lang-btn:hover { opacity: 1; color: #fff; border-color: rgba(255, 255, 255, .5); }
+  .auth .lang-btn { border-color: var(--line); color: var(--muted); }
+  .auth .lang-btn:hover { color: var(--text); border-color: var(--accent-line); }
+
           display: grid; place-items: center; font-size: 16px; flex: none; }
   .nav button { display: flex; width: 100%; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; border: 0;
                 background: none; color: inherit; cursor: pointer; text-align: left; margin-bottom: 2px; }
@@ -217,7 +223,7 @@
   .tips .card + .card { margin-top: 0; }
   .tip b { display: block; font-size: 14px; margin-bottom: 6px; }
   .tip .say { font-size: 13px; }
-  .tip .say::before { content: "你："; color: var(--muted); }
+  .tip .say::before { content: var(--say-prefix, "\4F60\FF1A"); color: var(--muted); }
   .tip .res { font-size: 13px; color: var(--muted); margin-top: 4px; }
   .tip .res::before { content: "→ "; color: var(--accent); }
   details.prompt-all > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 14px 22px; }
@@ -287,42 +293,42 @@
 
 <div id="auth" class="auth hidden">
   <form class="card" id="auth-form">
-    <div class="brand"><div class="logo">🤖</div>小智 Hub 管理后台</div>
+    <div class="brand"><div class="logo">🤖</div><span data-i18n="title">Xiaozhi Hub Admin</span><button class="lang-btn" type="button">EN</button></div>
     <input type="text" name="username" value="admin" autocomplete="username" class="hidden" tabindex="-1">
     <div id="auth-setup" class="hidden">
-      <h2>设置管理后台密码</h2>
-      <p class="muted small">首次使用请设置访问密码（至少 6 位）。设置后，用这个密码登录。</p>
-      <label class="f">密码<input class="in" id="setup-pw" type="password" autocomplete="new-password"></label>
-      <label class="f" style="margin-top:12px">再次输入<input class="in" id="setup-pw2" type="password" autocomplete="new-password"></label>
+      <h2 data-i18n="setup_h2">Set an admin password</h2>
+      <p class="muted small" data-i18n="setup_p">First run: choose an access password (at least 6 characters). You'll log in with it afterwards.</p>
+      <label class="f"><span data-i18n="password">Password</span><input class="in" id="setup-pw" type="password" autocomplete="new-password"></label>
+      <label class="f" style="margin-top:12px"><span data-i18n="password_again">Type it again</span><input class="in" id="setup-pw2" type="password" autocomplete="new-password"></label>
     </div>
     <div id="auth-login" class="hidden">
-      <h2>登录</h2>
-      <p class="muted small">输入管理后台密码。</p>
-      <label class="f">密码<input class="in" id="login-pw" type="password" autocomplete="current-password"></label>
+      <h2 data-i18n="login">Log in</h2>
+      <p class="muted small" data-i18n="login_p">Enter the admin password.</p>
+      <label class="f"><span data-i18n="password">Password</span><input class="in" id="login-pw" type="password" autocomplete="current-password"></label>
     </div>
     <div id="auth-error" class="banner err hidden" style="margin:14px 0 0"></div>
-    <button class="btn primary" id="auth-btn" type="submit" style="width:100%;margin-top:18px">登录</button>
+    <button class="btn primary" id="auth-btn" type="submit" style="width:100%;margin-top:18px" data-i18n="login">Log in</button>
   </form>
 </div>
 
 <div id="app" class="app hidden">
   <aside>
-    <div class="brand"><div class="logo">🤖</div><span>小智 Hub</span></div>
+    <div class="brand"><div class="logo">🤖</div><span data-i18n="brand">Xiaozhi Hub</span><button class="lang-btn" type="button">EN</button></div>
     <nav class="nav" id="nav">
-      <button data-page="status"><span class="ico">◎</span>状态</button>
-      <button data-page="how"><span class="ico">⇄</span>工作原理</button>
-      <button data-page="llm"><span class="ico">✦</span>大模型</button>
-      <button data-page="calls"><span class="ico">☎</span>呼名</button>
+      <button data-page="status"><span class="ico">◎</span><span data-i18n="nav_status">Status</span></button>
+      <button data-page="how"><span class="ico">⇄</span><span data-i18n="nav_how">How it works</span></button>
+      <button data-page="llm"><span class="ico">✦</span><span data-i18n="nav_llm">Models</span></button>
+      <button data-page="calls"><span class="ico">☎</span><span data-i18n="nav_calls">Call names</span></button>
       <button data-page="grokbot"><span class="ico">☁</span>Grok Bot</button>
-      <button data-page="memory"><span class="ico">✎</span>记忆</button>
-      <button data-page="asr"><span class="ico">◐</span>语音识别</button>
-      <button data-page="tts"><span class="ico">♪</span>语音合成</button>
-      <button data-page="intent"><span class="ico">⚙</span>意图识别</button>
-      <button data-page="update"><span class="ico">⟳</span>更新网关</button>
+      <button data-page="memory"><span class="ico">✎</span><span data-i18n="nav_memory">Memory</span></button>
+      <button data-page="asr"><span class="ico">◐</span><span data-i18n="nav_asr">Speech recognition</span></button>
+      <button data-page="tts"><span class="ico">♪</span><span data-i18n="nav_tts">Speech synthesis</span></button>
+      <button data-page="intent"><span class="ico">⚙</span><span data-i18n="nav_intent">Intent detection</span></button>
+      <button data-page="update"><span class="ico">⟳</span><span data-i18n="nav_update">Update gateway</span></button>
     </nav>
-    <div class="side-foot"><span class="dot" id="online-dot"></span><span id="online-text">没有设备在线</span><span id="online-short">无设备</span>
-      <div class="row"><button id="logout">退出登录</button>
-        <a href="https://github.com/justhalfbit/xiaozhi-hub-server" target="_blank" rel="noopener" title="xiaozhi-hub-server 开源仓库">GitHub ↗</a></div></div>
+    <div class="side-foot"><span class="dot" id="online-dot"></span><span id="online-text" data-i18n="no_devices">No devices online</span><span id="online-short" data-i18n="no_devices_short">None</span>
+      <div class="row"><button id="logout" data-i18n="logout">Log out</button>
+        <a href="https://github.com/justhalfbit/xiaozhi-hub-server" target="_blank" rel="noopener" data-i18n-title="repo_title">GitHub ↗</a></div></div>
   </aside>
   <main id="page"></main>
 </div>
@@ -332,6 +338,872 @@
 "use strict";
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// ---------- 语言与词条：STR 双语表，界面文字一律从这里取 ----------
+const STR = {
+  en: {
+
+/*ENSTART*/
+    lang_other: "\u4e2d\u6587",
+    title: "Xiaozhi Hub Admin",
+    brand: "Xiaozhi Hub",
+    repo_title: "xiaozhi-hub-server open-source repo",
+    setup_h2: "Set an admin password",
+    setup_p: "First run: choose an access password (at least 6 characters). You'll log in with it afterwards.",
+    setup_enter: "Set & enter",
+    password: "Password",
+    password_again: "Type it again",
+    login: "Log in",
+    login_p: "Enter the admin password.",
+    nav_status: "Status",
+    nav_how: "How it works",
+    nav_llm: "Models",
+    nav_calls: "Call names",
+    nav_memory: "Memory",
+    nav_asr: "Speech recognition",
+    nav_tts: "Speech synthesis",
+    nav_intent: "Intent detection",
+    nav_update: "Update gateway",
+    no_devices: "No devices online",
+    no_devices_short: "None",
+    logout: "Log out",
+    conn_error: "Can't reach the service — make sure it's still running",
+    req_failed: (n) => `Request failed: ${n}`,
+    expired: "Session expired",
+    expired_relogin: "Session expired — please log in again",
+    expired_unsaved: "Session expired (the service may have restarted). This page has unsaved changes that would fail to save — write them down first, then refresh and log in again",
+    save: "Save",
+    saving_hint: "Saving — hold on…",
+    copied: "Copied",
+    pw_short: "Password needs at least 6 characters",
+    pw_mismatch: "The two passwords don't match",
+    confirm_leave: "You have unsaved changes on this page. Leave anyway?",
+    loading: "Loading…",
+    load_failed: (m) => `Failed to load: ${m}`,
+    devices_online: (n) => `${n} device${n === 1 ? "" : "s"} online`,
+    devices_short: (n) => `${n}`,
+    conn_broken: "Can't reach the service",
+    conn_broken_short: "Offline",
+    need_login_short: "Log in",
+    voice_label: (n) => `Voice: ${n}`,
+    still_running: (r) => `Still running: ${r}`,
+    addr_ip: "Local IP",
+    addr_ota: "OTA address",
+    addr_admin: "Admin panel",
+    chk_ok: "OK",
+    chk_warn: "Heads-up",
+    chk_err: "Problem",
+    status_sub: "What the service is doing, which devices are online, and the addresses to connect with.",
+    sec_devices: "Online devices",
+    sec_addr: "Connection addresses",
+    sec_lang: "Hub language",
+    lang_hint: "The language the hub uses for its prompts, spoken replies and server-side messages. The page language follows it when you reopen the page; the EN/中文 button only changes this page.",
+    lang_apply: "Apply",
+    ota_hint: "Devices fill in the OTA address when joining your Wi-Fi. Give this computer a fixed IP in your router, or devices lose it when the IP changes.",
+    env_title: "Environment check",
+    env_warn: (n) => `${n} need a look`,
+    env_all_ok: "All good",
+    refresh: "Refresh",
+    copy: "Copy",
+    devices_paused: "Can't reach the service — the device list is paused. It refreshes itself once the service is back.",
+    no_devices_yet: "No devices online yet. Wake one up and it'll appear here.",
+    emo_idle: "Tap an emoji to send just it, or play them all in order and watch the device screen for changes.",
+    emo_running: (i, n, e, emo) => `Playing in order: ${i}/${n} — ${e} ${emo}`,
+    emo_stopped: (i, n) => `Stopped at ${i}/${n}.`,
+    emo_done: "Finished playing all.",
+    unknown_device: "Unknown device",
+    emo_who_title: "Who this device is talking to right now (say a call name to switch); separate from the global default on the Models page",
+    emo_now: (l) => `Now: ${l}`,
+    collapse: "Collapse",
+    emo_test: "Emotion test",
+    play_all: "Play all in order (2s each)",
+    stop: "Stop",
+    emo_sent: (e, c) => `Sent ${e} ${c}`,
+    just_now: "Just connected",
+    connected_min: (n) => `Connected ${n} min`,
+    connected_hm: (h, m) => `Connected ${h}h ${m}m`,
+    intent_none: "No plugins",
+    intent_on: "Use plugins",
+
+    go_setup: "Set this up",
+    empty_paren: "(empty)",
+    say_prefix: "You: ",
+    how_sub: "What happens after you say something, and how you can talk to it. Written from your current settings — change a setting and this follows.",
+    how_flow_title: "How one sentence travels",
+    how_flow_hint: "Click a step to edit its settings",
+    how_talk_title: "How to talk to it",
+    how_prompt_title: "The prompt sent to the model",
+    how_prompt_hint: "Handy for tuning the persona or chasing down odd answers",
+    sent_to: (l) => `What gets sent to ${l}`,
+    segs_n: (n) => `${n} parts, joined in order`,
+    expand_toggle: "Expand / collapse",
+    src_label: (s) => `Source: ${s}`,
+    copy_seg: "Copy this part",
+    actual_title: (id) => `System prompt actually used by online device ${id}`,
+    actual_note: (n) => `The version really generated when this device connected (part ${n}) — compare it with the preview above.`,
+    how_foot_a: "Why each step works this way, when connections and Claude Code processes start and stop, and what gets kept — see the",
+    how_foot_link: "design details ↗",
+    how_foot_b: " on GitHub.",
+
+    llm_sub_a: "A device starts on the default model when it connects. Once a model has a call name, saying “hi + name” at the start of a sentence switches to it — several models can be live at once (names are set on the ",
+    llm_sub_b: " page).",
+    def_now: (l) => `Default: ${l}`,
+    other_llm: (s) => `The current default ${s} isn't managed by this panel (the config file may have been edited by hand). Pick one below and press “Save & set default” to switch.`,
+    run_diff: (a, b) => `The config's default model is ${a}, but the service is still running ${b}.`,
+    cli_sec: "Local CLIs & agents · use your own accounts, no API keys below",
+    claude_missing: "Claude Code wasn't found — install it and log in first",
+    soon: "Coming soon",
+    codex_desc: "OpenAI's local coding assistant",
+    open_grok: "Open the Grok Bot page",
+    grok_ticked: (n) => `${n} bot${n === 1 ? "" : "s"} ticked`,
+    grok_unnamed: ", some still without call names",
+    grok_saywork: " — say the name to hand out work",
+    grok_desc: "xAI's cloud AI coworkers: log in, tick the bots, say a name to hand out work, and replies get read aloud",
+    default_model: "Default model",
+    say_hi_swap: "Say “hi + name” to switch to it",
+    names_label: (l) => `Names: ${l}`,
+    name1_label: (a) => `Name: ${a}`,
+    cli_not_default: "The local CLI isn't the default model",
+    def_is: (l) => ` (the default is ${l})`,
+    cli_has_name: " — but it has a call name: say “hi Claude” to use it",
+    cli_tail: ". Settings saved here take effect when devices reconnect; press “Save & set default” to make it the default.",
+    model_lbl: "Model",
+    custom: "Custom",
+    custom_hint: "Type the full model name",
+    custom_ph: "e.g. claude-sonnet-5-5",
+    think_level: "Thinking level",
+    think_note: "Higher thinks longer and replies slower.",
+    effort_slow: "Ultra and max can wait ten-plus seconds before speaking — not great for voice chat.",
+    perm_level: "Permission level",
+    perm_custom: "The current tools and permission mode were set by hand and match none of the three presets below. Picking one and saving reconfigures to it.",
+    web_on: "Allow web search",
+    web_hint: "It can search and open web pages; live answers take a few more seconds",
+    workdir_lbl: "Work folder",
+    workdir_hint: "It can only read and write files inside this folder",
+    filler_lbl: "Filler phrase",
+    filler_hint: "Said first when a reply is slow; leave empty to turn off",
+    adv_summary: "Advanced (timeouts, auto-resume, tools currently open)",
+    turn_to_lbl: "Turn timeout (s)",
+    turn_to_hint: "How long one task runs at most; default 600, 0 for no limit",
+    stall_lbl: "No-response timeout (s)",
+    stall_hint: "How long stuck before aborting; tool runs don't count; 0 skips the check",
+    idle_lbl: "Idle close (s)",
+    idle_hint: "0 closes the process after every turn",
+    bgmax_lbl: "Background max (s)",
+    bgmax_hint: "If you interrupt, disconnect, or a turn times out while Claude is still working, it keeps going in the background and reports when done; longest run; default 7200, 0 stops on interrupt",
+    bgafter_lbl: "Long-task threshold (s)",
+    bgafter_hint: "Used tools or ran this long before going background; shorter chats stop on interrupt; default 30",
+    resume_lbl: "Auto-resume (min)",
+    resume_hint: "Reconnecting within this window continues the chat; 0 only resumes when you say a resume keyword",
+    fillerwait_lbl: "Filler delay (s)",
+    progress_lbl: "Progress phrase",
+    progress_hint: "Said first, then elapsed time is reported; empty uses the default “Still processing, please wait”",
+    progress_ph: "Still processing, please wait",
+    resumekw_lbl: "Resume keywords",
+    resumekw_hint: "After the auto-resume window, saying these continues the last chat; comma-separated",
+    kw_join: ", ",
+    clipath_lbl: "CLI path",
+    clipath_hint: "Leave empty to find it automatically",
+    tools_lbl: "Tools currently open",
+    tools_hint: (m) => `Decided by permission level and the web toggle; permission mode ${m}`,
+    undo: "Undo changes",
+    save_default: "Save & set default",
+    cli_missing: "No ClaudeCLI entry in the config file — rerun the install script to generate one.",
+    api_sec: "API keys · cloud models, all via the OpenAI protocol",
+    v_default: "✓ Default",
+    configured: "Configured",
+    not_set: "Not set",
+    lvl_auto_confirm: "Auto: Claude can run commands on the computer and judges risk itself; low-risk ones run without asking. Speech can be misheard — turn it on?",
+    lvl_edit_confirm: "Editable: Claude can create and modify files in the work folder without asking. Turn it on?",
+    nochange: "Nothing changed",
+    api_not_default: (l) => `${l} isn't the default model`,
+    api_has_name: (a) => ` — but it has the call name “${a}”: say the name and it's ready`,
+    api_no_name: ". Save these details, add a call name on the Call names page, then say the name to use it",
+    api_tail: "; press “Save & set default” to make it the default.",
+    conflict_openai: (e) => `The config already has an entry named ${e} that isn't OpenAI-compatible — rename or delete it in the config file.`,
+    url_lbl: "Base URL",
+    models_hint: "Pick from the list or type it in",
+    model_ph: "Model name",
+    apikey_hint: "Leave empty if a local service needs no key",
+    key_set: (h) => `Set: ${h} — type a new value to replace`,
+    key_uns: "Not set — paste, then save",
+    key_note: "The key is stored only in this computer's config file; the page shows just the first and last 4 characters.",
+    test_conn: "Test connection",
+    testing_llm: "Sending a test line (reasoning models think first; waits up to a minute)…",
+    test_ok: (d, r) => `✓ Connected — reply in ${d}: “${r}”`,
+    under_1s: "under 1s",
+    secs: (n) => `${n}s`,
+    confirm_vendor: "Unsaved changes for this provider. Switch anyway?",
+
+    progress_int_lbl: "Progress nudge interval (s)",
+    progress_int_hint: "Wait before the first nudge, then stretching up to 4×; default 30, 0 to turn off",
+
+    asr_sub: "Turns what devices hear into text. One engine at a time: local recognition, or Doubao cloud.",
+    current_label: (x) => `Current: ${x}`,
+    other_asr: (x) => `The current ${x} isn't managed by this panel (the config file may have been edited by hand). Pick one below and use it to switch.`,
+    asr_running: (a, b) => `The config selects ${a}, but the service is still using ${b} — restart the service to apply.`,
+    in_use: "In use",
+    mark_local: "L",
+    mark_doubao: "D",
+    local_title: "Local X-ASR",
+    local_desc: "Mixed Chinese-English, recognised on this computer, no internet needed",
+    doubao_title: "Doubao streaming ASR",
+    doubao_desc: "Volcano Engine cloud recognition, streams as you talk; needs the service enabled, pay-as-you-go",
+    asr_other: "Other speech recognition options (Aliyun, iFlytek, other local models) can't be set up here yet.",
+    sherpa_missing: "No SherpaXASR entry in the config file — rerun the install script to generate one.",
+    model_files: "Model files",
+    switch_note: "After switching, new connections use it at once; online devices on their next connection.",
+    use_local: "Use local X-ASR",
+    conflict_doubao: (e) => `The config already has an entry named ${e} that isn't Doubao streaming ASR — rename or delete it in the config file.`,
+    doubao_intro_a: "Enable “Doubao streaming ASR model 2.0” in the ",
+    volcano_console: "Volcano Engine console",
+    doubao_intro_b: ", then paste the key here. The new console has a single API Key; the old one uses APP ID + Access Token.",
+    console_ver: "Console version",
+    console_new: "New · API Key",
+    console_old: "Old · APP ID + Access Token",
+    digits_ph: "A string of digits",
+    billing: "Billing plan",
+    billing_note: "Must match what's enabled in the console; a mismatch gives an auth failure.",
+    doubao_secret_note: "Secrets are stored only in this computer's config file; the page shows just the first and last 4 characters. Hotwords below go straight to Doubao; after-ASR fixes still apply.",
+    save_use: "Save & use",
+    db_connecting: "Connecting to the Doubao ASR service…",
+    db_ok: (d) => `✓ Connected — response in ${d}`,
+    confirm_switch_here: "Changes here aren't saved. Switch anyway?",
+    confirm_other_cards: "Other cards have unsaved changes; saving here reloads the page and those changes get dropped. Continue?",
+    hw_title: "Hotwords",
+    count_ge: (n) => `${n} total`,
+    hw_intro: "Proper nouns the recogniser often gets wrong are preferred while listening, e.g. GitHub, StackChan. Only near-matches can be rescued; for words heard identically (Claude always lands as cloud), use the after-ASR fixes below. Write the original capitalisation, one word per entry, and keep it modest (a few dozen at most) — too many actually cause mix-ups.",
+    hw_auto_a: "Dashed ones come from model names on the ",
+    hw_auto_b: " page — added automatically; edit them on the Call names page.",
+    hw_dropped: (n, list) => `Doubao takes about 100 hotword tokens per request at most — over the limit, so these ${n} won't be sent: ${list}. Model names from Call names get priority.`,
+    hw_ph: "Add a hotword, Enter to confirm",
+    add: "Add",
+    hw_result_ok: "Saving reloads the speech recognition: new connections use it at once, online devices on reconnect.",
+    hw_result_unsupported: "The current ASR engine doesn't support hotwords; supported: local X-ASR, Doubao.",
+    hw_save: "Save hotwords",
+    del: "Delete",
+    del_named: (w) => `Delete ${w}`,
+    from_calls: "From Call names",
+    hw_none: "No hotwords yet",
+    hw_comma: "One word per entry — no commas",
+    cor_title: "After-ASR fixes",
+    count_tiao: (n) => `${n} rules`,
+    cor_intro: "After text is recognised, wrong spellings get swapped for correct ones before the model sees them and the device shows them. Case-insensitive; spaces between Chinese and English both match; English is replaced whole-word, so “cloud code” won't touch “cloud coder”. A wrong spelling needs at least 2 characters — shorter ones catch ordinary speech.",
+    fix_to: "Fix to",
+    del_row: "Delete this rule",
+    cor_new_ph: "Another wrong spelling",
+    cor_addsec: "Add a rule",
+    cor_alias_ph: "What it gets heard as, e.g. cloud code",
+    cor_target_ph: "Correct spelling, e.g. Claude Code",
+    save_now: "Takes effect as soon as you save; online devices don't need to reconnect.",
+    cor_save: "Save fixes",
+    cor_fill: "Fill in both the wrong and the correct spelling",
+    recent_title: "Recent speech",
+    lines_n: (n) => `${n} lines`,
+    recent_note: "The last 30 recognised lines, kept in memory only — a service restart clears them. See a misheard word? Select those characters with the mouse first, then tap “Add hotword” or “Add fix”. With nothing selected the whole line is taken (for fixes, the pre-fix text); trim it yourself.",
+    before_fix: (x) => `Before fix: ${x}`,
+    to_hw: "Add hotword",
+    to_cor: "Add fix",
+    recent_none: "Nothing heard yet. Say a few things to a device, then refresh this page.",
+    hw_unsupported: "The current ASR engine doesn't support hotwords",
+    fill_hw_toast: "Edit it to the word you want, then press “Add”",
+    fill_cor_toast: "Keep just the misheard bit, fill in the correct spelling, then press “Add”",
+    vad_title: "Pause that ends a sentence",
+    vad_stream: "Streaming ASR is on — the service splits sentences itself, so this setting has no effect.",
+    vad_doubao: "Doubao's service splits sentences, and uses this pause to call a sentence done.",
+    vad_intro: "A mid-sentence pause longer than this counts as the end of the sentence, and gets sent to the model. If you keep getting cut off before finishing, raise it — then every sentence waits this long before the reply starts.",
+    vad_lbl: "Pause length (ms)",
+    vad_hint: (low, high) => `${low}-${high}; 800-1200 usually works well`,
+    vad_result_ok: "Takes effect as soon as you save; online devices don't need to reconnect. Both local ASR and Doubao use this pause.",
+    vad_result_unsupported: "The panel can only set SileroVAD's pause length.",
+
+    tts_sub: "Turns replies into speech. EdgeTTS is free, needs no key, and swapping voices downloads nothing.",
+    tts_only_edge: (x) => `Currently using ${x} — the panel only sets EdgeTTS voices.`,
+    preview: "Preview",
+    tts_save_note: "After saving, it takes effect when devices reconnect.",
+    tts_save: "Save voice",
+    preview_fail: "Preview failed — check that this computer can reach Microsoft's speech service",
+    intent_sub: "Decides whether the model can call plugins (weather, news, music and so on).",
+    intent_locked: "Claude Code is in use — only “No plugins” can be picked. Claude Code has its own tools (reading files, search, etc.) and doesn't use the plugins here. Switch back to an API model and your previous choice is restored automatically.",
+    intent_other: (x) => `${x} is no longer supported by the panel — pick one below and save.`,
+    intent_none_desc: "Every sentence goes straight to the model — chat only, no live lookups",
+    intent_on_desc: "The model calls plugins itself when needed, e.g. looking up the weather before answering. The model must support tool calling",
+    plugins_title: "Plugins",
+    plugins_hint: "Only applies when “Use plugins” is picked",
+    not_setup: "Not set up",
+    always_on: "Always on",
+    intent_extra: (list) => `Also kept from the config file, added by hand: ${list}`,
+    intent_locked_toast: "With Claude Code, only “No plugins” can be picked",
+
+    gb_sub: "xAI's cloud AI coworkers. Log in with your Cursor account and tick the bots you want — their names become call names automatically. Say “hi Bob, help me…” to a device to hand out work, and its replies get read aloud. Finished long jobs also show up in the Grok Bot app.",
+    gb_logged_in: "Signed in",
+    gb_expired: "Sign-in expired",
+    gb_not_logged_in: "Not signed in",
+    gb_internal: "This rides the internal endpoints the Grok Bot desktop app uses, not an official public API: an app update can break it, so keep the usage rate about the same as manual chatting. Credentials stay on this machine and never appear on the page.",
+    gb_account: "Account",
+    gb_pending: "Waiting for you to approve the sign-in in your browser. If the page didn't open on its own, copy the address below and open it in your browser, log in to Cursor, then press “Approve” (not “Open Grok Bot”).",
+    gb_login_url: "Sign-in URL",
+    gb_open_login: "Open sign-in page",
+    cancel: "Cancel",
+    gb_days_left: (n, when) => `Signed in — the session has ${n} day${n === 1 ? "" : "s"} left (until ${when}); it renews itself before expiring`,
+    gb_renew_next: "Signed in — it renews itself on next use",
+    gb_renew_tail: ". If renewal fails, this page will ask you to sign in again.",
+    gb_login_invalid: "Sign-in expired (the server asked for a fresh login). Please sign in again.",
+    gb_not_logged_yet: "Not signed in yet. Press “Sign in” and you'll get a Cursor sign-in URL — approve it in your browser; no password needed here.",
+    gb_relogin: "Sign in again",
+    gb_login: "Sign in",
+    gb_login_first: "Log in to read the Bot list.",
+    gb_bots_failed: (x) => `Failed to read the Bot list: ${x}`,
+    gb_read_at: (w) => `List read at ${w}. `,
+    gb_not_read: "The bot list hasn't been read from the cloud yet (this wakes sleeping cloud computers and takes a few seconds). ",
+    gb_alias_a: "Tick and save, and the bot's name becomes its call name automatically. To change the spelling, or record it to your pronunciation, go to the ",
+    gb_alias_b: " page. Names with spaces or punctuation, or already taken by another model, aren't wired up automatically — add those by hand on the Call names page.",
+    gb_busy: "Busy",
+    gb_no_name: "No call name yet",
+    gb_no_bots: "No bots. Create one in the Grok Bot app first, then press “Reload”.",
+    gb_save_now: "Takes effect as soon as you save — no service restart needed.",
+    gb_reload: "Reload",
+    gb_read_list: "Read bot list",
+    gb_logout_confirm: "Logging out deletes the credentials stored on this machine, and devices won't be able to reach Grok Bot afterwards (a chat in progress will still finish). Sure?",
+
+    mem_src_summary: "Auto summary",
+    mem_src_manual: "Edited in admin",
+    mem_src_cleared: "Cleared",
+    mem_chat_off: "Chat logging off",
+    mem_sum_on: "Auto-summary on",
+    mem_sum_off: "Auto-summary off",
+    mem_sub: (n, tok) => `Chat history is stored on this machine per device and model (data/chat.db); only the newest ${n} messages (within about ${tok} tokens) go to the model each time. Older parts are summarised automatically into the memory below and fed into the system prompt. All API models on one device share a single memory; Claude Code and Grok Bot don't use it (their context lives in their own sessions). Edit or clear here, and the next question uses the new version.`,
+    mem_none: "No chat history yet. Once a device has chatted a few rounds and older parts get trimmed, the summarised memory shows up here.",
+    n_msgs: (n) => `${n} msgs`,
+    mem_no_sum: " (no summarising)",
+    mem_nochat: "No chat history",
+    mem_empty: "No memory yet",
+    mem_stored: (x) => `Stored: ${x}`,
+    mem_full: "Memory text",
+    mem_full_hint: (n) => `Bullet style, one point per line; auto-summary merges new content onto this copy (within about ${n} characters)`,
+    n_chars: (n) => `${n} characters`,
+    clear: "Clear",
+    expired_copy: "Session expired. Copy your edited content first, then refresh the page and log in again",
+    save_failed: "Save failed",
+    mem_saved: "Saved — the next question uses the new memory",
+    mem_cleared: "Memory cleared",
+    mem_clear_confirm: (dev) => `Clear the memory for ${dev}? Chat history is not affected.`,
+    cn_sub_a: (r) => `After waking a device, say “hi + name” at the start of a sentence and the matching model answers; keep talking and it all goes to that model until you call another name. Each model remembers only its own chats. Saying just the name only switches models and replies “${r}” — Claude isn't started; it starts when you say your first sentence, and decides then whether to pick up the last chat. The full flow is on the `,
+    cn_sub_b: " page.",
+    cn_on: "On",
+    cn_off: "Off",
+    cn_enable: "Enable call names",
+    cn_enable_hint: "Turned off, “hi + name” is just an ordinary sentence for the current model",
+    cn_reply_lbl: "Reply to a name alone",
+    cn_reply_hint: "When you say just “hi + name”, the server switches models and answers with this line — no model starts up. Shorter is faster; inner punctuation is stripped and it plays in one go",
+    cn_note_a: (p) => `Speech recognition often hears call names as other spellings (Claude lands as cloud), so list every spelling. The leading “${p}” doesn't need typing. A device's first connection uses the panel's default model (`,
+    cn_note_b: (x) => `${x}); after that, each device's last-called model is remembered.`,
+    cn_unset: "not set",
+    cn_option_label: (id, ip) => `${id} (${ip})`,
+    alias_taken: (a, l) => `“${a}” is already ${l}'s call name`,
+    cn_learning: (say, n, total, left) => `Recording now: wake the device first, then say “hi ${say}”. After each try, wait for the device to answer “got it” before the next. ${n}/${total} captured, ${left} seconds left.`,
+    cn_stop: "Stop recording",
+    cn_learning_other: "Another model is being recorded right now — come back once it's done.",
+    cn_no_device_learn: "Record from a device: no devices online. Wake a device first, then refresh this page.",
+    cn_learn_btn: "Record from device",
+    cn_learn_hint: "Say “hi + name” to the device 3 times; the spellings the recognition hears from your pronunciation are noted; speech during recording doesn't go to the model",
+    cn_results: "What was heard",
+    cn_sample: (i, text, alias) => `Take ${i}: heard “${text}” → name ${alias}`,
+    cn_no_heard: "(no name heard)",
+    cn_dup: "Already in the list",
+    cn_take: "Add the ticked ones to the names",
+    cn_not_ready: "Not ready yet",
+    cn_no_names: "No call names yet",
+    cn_add_ph: "Add a spelling by hand",
+    cn_remove_model: "Stop calling this model",
+    cn_none: "No model has a call name yet.",
+    cn_taken: "Added to the list — remember to press Save",
+    cn_add_title: "Call another model",
+    cn_add_note: "Only already-configured models can be picked. To add another provider, fill in the Base URL, model and API Key on the Models page first.",
+    cn_add_all: "All configured models are already listed. To add another provider, fill in the Base URL, model and API Key on the Models page first.",
+
+    unknown_val: "Unknown",
+    commit_short: (s) => `(${s})`,
+    upd_sub: "Compares with the version on GitHub. When there's a new version, you decide when to update — it never updates itself.",
+    upd_check: "Check for updates",
+    upd_cur: "Current version",
+    upd_running: "Running",
+    upd_run_diff: "Different from the current version — restart the service to switch to it",
+    upd_branch: "Branch",
+    upd_src: "Update source",
+    upd_src_mid: (b) => ` branch <code>${b}</code>`,
+    upd_new_title: "New version",
+    upd_comparing: "Comparing with GitHub… (waits up to 30s on a bad connection)",
+    upd_done_ok: (w, f, t) => `${w} update succeeded: ${f} → ${t}.`,
+    upd_done_latest: (w) => `${w} checked — already the latest version, nothing changed.`,
+    upd_restart: "Code updated, but the service was started manually and didn't restart itself: press Ctrl+C in the terminal running the gateway, then run scripts/start.sh.",
+    upd_failed_a: (w, e) => `${w} update didn't finish: ${e}`,
+    upd_failed_b: ". The gateway is still on its old version",
+    upd_output: "Update output",
+    upd_checked_at: (w) => `Checked at ${w}`,
+    upd_latest: "Already the latest version",
+    upd_remote_latest: "Latest remote: ",
+    upd_avail: "New version available",
+    upd_latest_ver: "Latest version: ",
+    update_note: "The gateway restarts during the update — usually 1–2 minutes. Online devices drop briefly and reconnect automatically; a chat in progress will be interrupted.",
+    upd_deps: " If dependencies changed they get installed automatically; if that fails or the new version won't come up, it rolls back to the current one.",
+    upd_now: "Update now",
+    upd_confirm_a: "Update the gateway now?",
+    upd_busy_sub: "Updating — please don't close the gateway or cut the power.",
+    upd_busy_banner: "Updating — the gateway will restart, usually 1–2 minutes. Online devices drop briefly and reconnect automatically; this page recovers on its own.",
+    upd_step: "Current step: ",
+    upd_preparing: "Getting ready",
+    upd_restarting: "The gateway is restarting — waiting for it to come back…",
+    upd_elapsed: (n) => `${n}s elapsed`,
+    upd_slow_suffix: ". The new version boots slowly; if it's not up within 5 minutes it rolls back to the previous version automatically",
+    upd_done_toast: (x) => `Updated to ${x} — the page will refresh now`,
+
+/*ENEND*/
+  },
+  zh: {
+
+/*ZHSTART*/
+    lang_other: "EN",
+    title: "小智 Hub 管理后台",
+    brand: "小智 Hub",
+    repo_title: "xiaozhi-hub-server 开源仓库",
+    setup_h2: "设置管理后台密码",
+    setup_p: "首次使用请设置访问密码（至少 6 位）。设置后，用这个密码登录。",
+    setup_enter: "设置并进入",
+    password: "密码",
+    password_again: "再次输入",
+    login: "登录",
+    login_p: "输入管理后台密码。",
+    nav_status: "状态",
+    nav_how: "工作原理",
+    nav_llm: "大模型",
+    nav_calls: "呼名",
+    nav_memory: "记忆",
+    nav_asr: "语音识别",
+    nav_tts: "语音合成",
+    nav_intent: "意图识别",
+    nav_update: "更新网关",
+    no_devices: "没有设备在线",
+    no_devices_short: "无设备",
+    logout: "退出登录",
+    conn_error: "连不上服务，请确认服务还在运行",
+    req_failed: (n) => `请求失败：${n}`,
+    expired: "登录已过期",
+    expired_relogin: "登录已过期，请重新登录",
+    expired_unsaved: "登录已过期（服务可能重启过）。页面上还有没保存的修改，保存会失败，请先把它们记下来，再刷新页面重新登录",
+    save: "保存",
+    saving_hint: "正在保存，请稍等…",
+    copied: "已复制",
+    pw_short: "密码至少 6 位",
+    pw_mismatch: "两次输入的密码不一致",
+    confirm_leave: "当前页面有修改还没保存，确定离开吗？",
+    loading: "加载中…",
+    load_failed: (m) => `加载失败：${m}`,
+    devices_online: (n) => `${n} 台设备在线`,
+    devices_short: (n) => `${n} 台`,
+    conn_broken: "连不上服务",
+    conn_broken_short: "已断开",
+    need_login_short: "需登录",
+    voice_label: (n) => `音色：${n}`,
+    still_running: (r) => `运行中仍是 ${r}`,
+    addr_ip: "本机 IP",
+    addr_ota: "OTA 地址",
+    addr_admin: "管理后台",
+    chk_ok: "正常",
+    chk_warn: "注意",
+    chk_err: "异常",
+    status_sub: "服务运行情况、在线设备和连接地址。",
+    sec_devices: "在线设备",
+    sec_addr: "连接地址",
+    sec_lang: "网关语言",
+    lang_hint: "网关的提示词、语音回复和后端提示文字使用的语言。页面语言重新打开后跟随它；EN/中文 按钮只改这个页面的显示。",
+    lang_apply: "应用",
+    ota_hint: "设备配网时填写 OTA 地址。请在路由器里给这台电脑设置固定 IP，否则 IP 变了设备会连不上。",
+    env_title: "环境自检",
+    env_warn: (n) => `${n} 项需要注意`,
+    env_all_ok: "全部正常",
+    refresh: "刷新",
+    copy: "复制",
+    devices_paused: "连不上服务，设备列表暂停更新。服务恢复后会自动刷新。",
+    no_devices_yet: "暂无设备在线。唤醒设备后会自动出现在这里。",
+    emo_idle: "点一个表情单独发送，或者依次播放全部，对照设备屏幕看哪些有变化。",
+    emo_running: (i, n, e, emo) => `正在依次播放：第 ${i}/${n} 个 ${e} ${emo}`,
+    emo_stopped: (i, n) => `已停止（播放到第 ${i}/${n} 个）。`,
+    emo_done: "依次播放已结束。",
+    unknown_device: "未知设备",
+    emo_who_title: "这台设备此刻在跟谁说话（叫称呼切换）；和大模型页的全局默认是两回事",
+    emo_now: (l) => `当前：${l}`,
+    collapse: "收起",
+    emo_test: "表情测试",
+    play_all: "依次播放全部（每个 2 秒）",
+    stop: "停止",
+    emo_sent: (e, c) => `已发送 ${e} ${c}`,
+    just_now: "刚刚连接",
+    connected_min: (n) => `已连接 ${n} 分钟`,
+    connected_hm: (h, m) => `已连接 ${h} 小时 ${m} 分`,
+    intent_none: "不用插件",
+    intent_on: "用插件",
+
+    go_setup: "去设置",
+    empty_paren: "（空）",
+    say_prefix: "你：",
+    how_sub: "说一句话之后会发生什么、可以怎么跟它说话。内容按当前配置生成，修改设置后会跟着变。",
+    how_flow_title: "一句话怎么走",
+    how_flow_hint: "点一步去改它的设置",
+    how_talk_title: "怎么跟它说话",
+    how_prompt_title: "发给大模型的提示词",
+    how_prompt_hint: "调人设、排查回答不对劲时用得上",
+    sent_to: (l) => `发给 ${l} 的内容`,
+    segs_n: (n) => `${n} 段，按顺序拼在一起`,
+    expand_toggle: "展开 / 收起",
+    src_label: (s) => `来源：${s}`,
+    copy_seg: "复制这段",
+    actual_title: (id) => `在线设备 ${id} 实际使用的系统提示词`,
+    actual_note: (n) => `这是这台设备连接时真正生成的版本（第 ${n} 段），可以和上面的预览对照。`,
+    how_foot_a: "每一步为什么这样设计、连接和 Claude Code 进程什么时候启动和关闭、哪些记录会保存，见 GitHub 上的",
+    how_foot_link: "设计细节 ↗",
+    how_foot_b: "。",
+
+    llm_sub_a: "设备刚连上时用默认模型。给模型配了称呼后，句子开头说“嗨 + 称呼”就换成它，几个模型可以同时用（称呼在",
+    llm_sub_b: "页配）。",
+    def_now: (l) => `默认：${l}`,
+    other_llm: (s) => `当前默认的 ${s} 不在后台管理范围内（可能是手动改了配置文件）。在下面选择一种并点“保存并设为默认”即可切换。`,
+    run_diff: (a, b) => `配置里的默认模型是 ${a}，但服务仍在用 ${b}。`,
+    cli_sec: "本地 CLI 与智能体 · 用你自己的账号，不走下面的 API Key",
+    claude_missing: "没有找到 Claude Code，请先安装并登录",
+    soon: "即将支持",
+    codex_desc: "OpenAI 的本地编程助手",
+    open_grok: "打开 Grok Bot 页",
+    grok_ticked: (n) => `已勾选 ${n} 个 Bot`,
+    grok_unnamed: "，有的还没配称呼",
+    grok_saywork: "，叫名字就能派活",
+    grok_desc: "xAI 的云端 AI 同事：登录、勾选 Bot，叫名字派活，回复念给你听",
+    default_model: "默认模型",
+    say_hi_swap: "说“嗨 + 称呼”就换成它",
+    names_label: (l) => `称呼：${l}`,
+    name1_label: (a) => `称呼：${a}`,
+    cli_not_default: "本地 CLI 不是默认模型",
+    def_is: (l) => `（默认是 ${l}）`,
+    cli_has_name: "，但配了称呼，说“嗨 Claude”就能用它",
+    cli_tail: "。这里改的设置保存后，设备重新连接时生效；想让它当默认模型就点“保存并设为默认”。",
+    model_lbl: "模型",
+    custom: "自定义",
+    custom_hint: "填完整模型名",
+    custom_ph: "例如 claude-sonnet-5-5",
+    think_level: "思考级别",
+    think_note: "越高想得越久、回复越慢。",
+    effort_slow: "超高和最高可能要等十几秒才开口，语音对话不推荐。",
+    perm_level: "权限级别",
+    perm_custom: "当前的工具和权限模式是手动配置的，和下面三档都对不上。选一档保存后会按这档重新设置。",
+    web_on: "允许联网搜索",
+    web_hint: "可以搜索网页、打开网页，回答实时问题会多等几秒",
+    workdir_lbl: "工作目录",
+    workdir_hint: "读写文件只能在这个目录里",
+    filler_lbl: "填充语",
+    filler_hint: "回复慢时先说这句，留空关闭",
+    adv_summary: "高级设置（超时、自动接续、当前开放的工具）",
+    turn_to_lbl: "单轮超时（秒）",
+    turn_to_hint: "一个任务最长做多久，默认 600，填 0 不限制",
+    stall_lbl: "无响应超时（秒）",
+    stall_hint: "卡住多久就中断；执行工具时不算，填 0 不检查",
+    idle_lbl: "空闲关闭进程（秒）",
+    idle_hint: "填 0 每轮结束就关闭",
+    bgmax_lbl: "后台最长（秒）",
+    bgmax_hint: "打断、断开、单轮超时时 Claude 还在干活就转后台接着做，做完再汇报；最长做多久，默认 7200，填 0 打断就停",
+    bgafter_lbl: "算作长任务（秒）",
+    bgafter_hint: "用过工具、或做了这么久才转后台；更短的聊天被打断直接停，默认 30",
+    resume_lbl: "自动接续（分钟）",
+    resume_hint: "这段时间内重连接着聊，填 0 只在说接续指令时接上",
+    fillerwait_lbl: "填充语等待（秒）",
+    progress_lbl: "进度提示",
+    progress_hint: "第一次说这句，之后报已用时间；留空用默认的“还在处理，请稍等”",
+    progress_ph: "还在处理，请稍等",
+    resumekw_lbl: "接续关键字",
+    resumekw_hint: "超过自动接续时间后，说这些话会接着上次的对话，用逗号分隔",
+    kw_join: "，",
+    clipath_lbl: "CLI 路径",
+    clipath_hint: "留空自动查找",
+    tools_lbl: "当前开放的工具",
+    tools_hint: (m) => `由权限级别和联网开关决定，权限模式 ${m}`,
+    undo: "撤销修改",
+    save_default: "保存并设为默认",
+    cli_missing: "配置文件里没有 ClaudeCLI 条目，请重新运行安装脚本生成配置。",
+    api_sec: "API Key · 云端模型，统一走 OpenAI 协议",
+    v_default: "✓ 默认",
+    configured: "已配置",
+    not_set: "未配置",
+    lvl_auto_confirm: "Auto：Claude 可以在电脑上执行命令，由它自己判断风险，低风险的会自动执行。语音可能被误识别，确定开启吗？",
+    lvl_edit_confirm: "可编辑：Claude 可以在工作目录里新建和修改文件，不再询问。确定开启吗？",
+    nochange: "没有修改",
+    api_not_default: (l) => `${l} 不是默认模型`,
+    api_has_name: (a) => `，但配了称呼“${a}”，叫名字就能用它`,
+    api_no_name: "。填好保存后到呼名页配上称呼，就能叫名字用它",
+    api_tail: "；想让它当默认模型就点“保存并设为默认”。",
+    conflict_openai: (e) => `配置里已有一个叫 ${e} 的条目，但不是 OpenAI 兼容类型，请在配置文件里改名或删掉它。`,
+    url_lbl: "接口地址",
+    models_hint: "可从列表选，也可以手填",
+    model_ph: "模型名称",
+    apikey_hint: "本机服务不需要 Key 时可以留空",
+    key_set: (h) => `已设置 ${h}，输入新值可替换`,
+    key_uns: "未设置，粘贴后保存",
+    key_note: "Key 只保存在这台电脑的配置文件里，页面上只显示首尾 4 位。",
+    test_conn: "测试连接",
+    testing_llm: "正在发一句话测试（推理型模型要先想一会儿，最多等一分钟）…",
+    test_ok: (d, r) => `✓ 连接正常，${d}收到回复“${r}”`,
+    under_1s: "不到 1 秒",
+    secs: (n) => `${n} 秒`,
+    confirm_vendor: "这个厂商的修改还没保存，确定切换吗？",
+
+    progress_int_lbl: "进度提示间隔（秒）",
+    progress_int_hint: "第一次提示前等多久，之后逐渐拉长到 4 倍；默认 30，填 0 关闭",
+
+    asr_sub: "把设备说的话转成文字。一次只能用一种：本地识别，或者豆包云端识别。",
+    current_label: (x) => `当前：${x}`,
+    other_asr: (x) => `当前使用的 ${x} 不在后台管理范围内（可能是手动改了配置文件）。在下面选择一种并使用即可切换。`,
+    asr_running: (a, b) => `配置里选的是 ${a}，但服务仍在使用 ${b}，重启服务后生效。`,
+    in_use: "使用中",
+    mark_local: "本",
+    mark_doubao: "豆",
+    local_title: "本地 X-ASR",
+    local_desc: "中英混合，在这台电脑上识别，不需要联网",
+    doubao_title: "豆包流式语音识别",
+    doubao_desc: "火山引擎云端识别，边说边识别；需要开通服务，按用量付费",
+    asr_other: "其他语音识别方案（阿里、讯飞、其他本地模型）暂不支持在后台设置。",
+    sherpa_missing: "配置文件里没有 SherpaXASR 条目，请重新运行安装脚本生成配置。",
+    model_files: "模型文件",
+    switch_note: "切换后新连接马上生效，在线设备重新连接后生效。",
+    use_local: "使用本地 X-ASR",
+    conflict_doubao: (e) => `配置里已有一个叫 ${e} 的条目，但不是豆包流式识别，请在配置文件里改名或删掉它。`,
+    doubao_intro_a: "在",
+    volcano_console: "火山引擎控制台",
+    doubao_intro_b: "开通“豆包流式语音识别模型 2.0”后，把密钥填在这里。 新版控制台只有一个 API Key；旧版控制台是 APP ID 加 Access Token。",
+    console_ver: "控制台版本",
+    console_new: "新版 · API Key",
+    console_old: "旧版 · APP ID + Access Token",
+    digits_ph: "一串数字",
+    billing: "计费方式",
+    billing_note: "要和控制台里开通的一致，不一致会提示鉴权失败。",
+    doubao_secret_note: "密钥只保存在这台电脑的配置文件里，页面上只显示首尾 4 位。下面的热词会直接带给豆包；识别后纠错照常生效。",
+    save_use: "保存并使用",
+    db_connecting: "正在连接豆包识别服务…",
+    db_ok: (d) => `✓ 连接正常，${d}收到回应`,
+    confirm_switch_here: "这里的修改还没保存，确定切换吗？",
+    confirm_other_cards: "其他卡片还有没保存的修改，保存这里后页面会刷新，那些修改会丢掉。继续吗？",
+    hw_title: "热词",
+    count_ge: (n) => `${n} 个`,
+    hw_intro: "容易认错的专有名词，识别时优先考虑，比如 GitHub、StackChan。只能把发音接近的词救回来；发音完全一样的（Claude 总被听成 cloud），用下面的“识别后纠错”。 写原本的大小写，一个词一项，不要太多（几十个以内），太多反而容易误认。",
+    hw_auto_a: "虚线的来自",
+    hw_auto_b: "里的模型名字，自动带上，在呼名页修改。",
+    hw_dropped: (n, list) => `豆包一次最多带约 100 个 token 的热词，超出了，这 ${n} 个不会带上：${list}。呼名里的模型名字会优先带上。`,
+    hw_ph: "添加热词，回车确认",
+    add: "添加",
+    hw_result_ok: "保存后重新加载语音识别：新连接马上生效，在线设备重新连接后生效。",
+    hw_result_unsupported: "当前语音识别不支持热词，支持的有本地 X-ASR、豆包。",
+    hw_save: "保存热词",
+    del: "删除",
+    del_named: (w) => `删除 ${w}`,
+    from_calls: "来自呼名",
+    hw_none: "还没有热词",
+    hw_comma: "一个词一项，不要用逗号",
+    cor_title: "识别后纠错",
+    count_tiao: (n) => `${n} 条`,
+    cor_intro: "识别出文字后，把认错的写法换成正确的，再交给大模型和设备显示。不区分大小写，中英文之间有没有空格都算；英文按整词替换，“cloud code” 不会改到 “cloud coder” 里。 认错的写法至少 2 个字，太短容易误改普通的话。",
+    fix_to: "改成",
+    del_row: "删除这一条",
+    cor_new_ph: "再加一种认错的写法",
+    cor_addsec: "新增一条",
+    cor_alias_ph: "认错的写法，如 cloud code",
+    cor_target_ph: "正确写法，如 Claude Code",
+    save_now: "保存后马上生效，在线设备不用重新连接。",
+    cor_save: "保存纠错表",
+    cor_fill: "认错的写法和正确写法都要填",
+    recent_title: "最近识别",
+    lines_n: (n) => `${n} 句`,
+    recent_note: "最近 30 句识别结果，只保存在内存里，重启服务后清空。看到认错的词，先用鼠标选中那几个字，再点“加热词”或“加纠错”；不选就带上整句（加纠错时带纠错前的原文），再自己删改。",
+    before_fix: (x) => `纠错前：${x}`,
+    to_hw: "加热词",
+    to_cor: "加纠错",
+    recent_none: "还没有识别记录。跟设备说几句话后刷新本页。",
+    hw_unsupported: "当前语音识别不支持热词",
+    fill_hw_toast: "改成要加的词，再点“添加”",
+    fill_cor_toast: "改成认错的那部分，填上正确写法，再点“添加”",
+    vad_title: "说完停顿多久算一句",
+    vad_stream: "当前是流式识别，由识别服务自己断句，这里的设置不起作用。",
+    vad_doubao: "豆包由识别服务断句，也按这个时长判断一句话说完。",
+    vad_intro: "说话中间停顿超过这个时长，就当这句话说完了，发给大模型。经常话没说完就被打断，就调大一些；调大后每句话说完要多等这么久才回复。",
+    vad_lbl: "停顿时长（毫秒）",
+    vad_hint: (low, high) => `${low}～${high}，一般 800～1200 比较合适`,
+    vad_result_ok: "保存后马上生效，在线设备不用重新连接。本地识别和豆包都按这个时长判断。",
+    vad_result_unsupported: "后台只支持设置 SileroVAD 的停顿时长。",
+
+    tts_sub: "把回复转成语音。EdgeTTS 免费、不需要 Key，换音色不用下载任何文件。",
+    tts_only_edge: (x) => `当前使用的是 ${x}，后台只支持设置 EdgeTTS 的音色。`,
+    preview: "试听",
+    tts_save_note: "保存后，设备重新连接时生效。",
+    tts_save: "保存音色",
+    preview_fail: "试听失败，请检查电脑能否访问微软的语音服务",
+    intent_sub: "决定大模型能不能调用插件（查天气、听新闻、放音乐等）。",
+    intent_locked: "正在使用 Claude Code，只能选“不用插件”。Claude Code 有自己的工具（读文件、搜索等），不走这里的插件。切换到 API 模型后，这里会自动恢复上次的选择。",
+    intent_other: (x) => `当前的 ${x} 后台不再支持，请在下面选一种并保存。`,
+    intent_none_desc: "每句话直接交给大模型，只能聊天，查不了实时信息",
+    intent_on_desc: "大模型需要时自己调用插件，例如问天气时先查天气再回答。需要模型支持工具调用",
+    plugins_title: "插件",
+    plugins_hint: "选“用插件”时生效",
+    not_setup: "还没配置",
+    always_on: "始终开启",
+    intent_extra: (list) => `另外保留了配置文件里手动添加的：${list}`,
+    intent_locked_toast: "使用 Claude Code 时只能选“不用插件”",
+
+    gb_sub: "xAI 的云端 AI 同事。用 Cursor 账号登录后勾选 Bot，它的名字会自动成为称呼，对设备说“嗨 孙悟空，帮我……”就能派活，它的回复会念出来；长任务做完后在 Grok Bot App 里也能看到。",
+    gb_logged_in: "已登录",
+    gb_expired: "登录已失效",
+    gb_not_logged_in: "未登录",
+    gb_internal: "走的是 Grok Bot 桌面 App 用的内部接口，不是官方公开的 API：App 升级后可能失效，使用频率请和手动聊天相当。凭证只保存在本机，不会显示在页面上。",
+    gb_account: "账号",
+    gb_pending: "正在等待你在浏览器里批准登录。页面没有自动打开的话，复制下面的地址在浏览器里打开，登录 Cursor 账号后点“批准”（不是“打开 Grok Bot”）。",
+    gb_login_url: "登录地址",
+    gb_open_login: "打开登录页",
+    cancel: "取消",
+    gb_days_left: (n, when) => `已登录，登录有效期还有 ${n} 天（到 ${when}）。快到期时会自动续期`,
+    gb_renew_next: "已登录，下次使用时会自动续期",
+    gb_renew_tail: "；续期失败这里会提示重新登录。",
+    gb_login_invalid: "登录已失效（服务端要求重新登录），请重新登录。",
+    gb_not_logged_yet: "还没登录。点“登录”会给出一个 Cursor 的登录地址，在浏览器里批准即可，不需要在这里输入密码。",
+    gb_relogin: "重新登录",
+    gb_login: "登录",
+    gb_login_first: "登录后再读取 Bot 列表。",
+    gb_bots_failed: (x) => `读取 Bot 列表失败：${x}`,
+    gb_read_at: (w) => `列表读取于 ${w}。`,
+    gb_not_read: "还没从云端读取 Bot 列表（会唤醒休眠的云端电脑，要几秒）。",
+    gb_alias_a: "勾选保存后自动用 Bot 的名字做称呼；想改写法、或按你的发音录入，到",
+    gb_alias_b: "页。名字含空格标点、或已被别的模型占用时不会自动配，要到呼名页手动加。",
+    gb_busy: "忙",
+    gb_no_name: "还没配称呼",
+    gb_no_bots: "没有 Bot。先在 Grok Bot App 里创建，再点“重新读取”。",
+    gb_save_now: "保存后马上生效，不用重启服务。",
+    gb_reload: "重新读取",
+    gb_read_list: "读取 Bot 列表",
+    gb_logout_confirm: "退出登录会删除本机保存的凭证，之后设备叫不到 Grok Bot（正在进行的对话会做完）。确定吗？",
+
+    mem_src_summary: "自动总结",
+    mem_src_manual: "后台修改",
+    mem_src_cleared: "已清空",
+    mem_chat_off: "聊天记录未开启",
+    mem_sum_on: "自动总结已开启",
+    mem_sum_off: "自动总结已关闭",
+    mem_sub: (n, tok) => `聊天记录按设备和模型存在本机（data/chat.db），每次只把最近 ${n} 条（约 ${tok} token 以内）发给模型； 更早的部分自动总结成这里的记忆，放进系统提示。同一台设备的所有 API 模型共用一份记忆，Claude Code 和 Grok Bot 不用它（它们的上下文在自己的会话里）。 在这里修改或清空后，下一次提问就按新的来。`,
+    mem_none: "还没有聊天记录。设备聊过几轮、旧对话被截掉后，这里会出现总结出来的记忆。",
+    n_msgs: (n) => `${n} 条`,
+    mem_no_sum: "（不总结）",
+    mem_nochat: "没有聊天记录",
+    mem_empty: "还没有记忆",
+    mem_stored: (x) => `存着的记录：${x}`,
+    mem_full: "记忆全文",
+    mem_full_hint: (n) => `要点式，每条一行；自动总结时会在这份基础上合并新的内容（约 ${n} 字以内）`,
+    n_chars: (n) => `${n} 字`,
+    clear: "清空",
+    expired_copy: "登录已过期。请先复制改好的内容，再刷新页面重新登录",
+    save_failed: "保存失败",
+    mem_saved: "已保存，下一次提问就用新的记忆",
+    mem_cleared: "记忆已清空",
+    mem_clear_confirm: (dev) => `清空 ${dev} 的记忆？聊天记录不受影响。`,
+    cn_sub_a: (r) => `唤醒设备后，句子开头说“嗨 + 称呼”，就换成对应的模型回答；之后直接说话也交给它，直到叫别的称呼。每个模型只记得跟自己的对话。 只说称呼时只切换模型、回一声“${r}”，不启动 Claude；说出第一句话时才启动，并判断要不要接上次的对话。完整经过见`,
+    cn_sub_b: `。`,
+    cn_on: "已开启",
+    cn_off: "已关闭",
+    cn_enable: "开启呼名",
+    cn_enable_hint: "关闭后，“嗨 + 称呼”会当作普通的话交给当前模型",
+    cn_reply_lbl: "只说称呼时的回复",
+    cn_reply_hint: "只说“嗨 + 称呼”时，服务端切换模型后直接回这句，不启动模型。越短越快，中间的标点会去掉、一次播完",
+    cn_note_a: (p) => `语音识别常把称呼听成别的写法（比如 Claude 会听成 cloud），每种写法都要列出来。开头的“${p}”不用写。设备第一次连上时用后台默认的模型（`,
+    cn_note_b: (x) => `${x}），之后记住每台设备上次叫的模型。`,
+    cn_unset: "未设置",
+    cn_option_label: (id, ip) => `${id}（${ip}）`,
+    alias_taken: (a, l) => `“${a}”已经是 ${l} 的称呼`,
+    cn_learning: (say, n, total, left) => `正在录入：先唤醒设备，再说“嗨 ${say}”，每说一遍等设备回答“收到”再说下一遍。 已录 ${n}/${total} 遍，还剩 ${left} 秒。`,
+    cn_stop: "停止录入",
+    cn_learning_other: "正在给别的模型录入，录完再来。",
+    cn_no_device_learn: "用设备录入：没有设备在线。先唤醒设备，再刷新本页。",
+    cn_learn_btn: "用设备录入",
+    cn_learn_hint: "对着设备说 3 遍“嗨 + 称呼”，按你的发音记下语音识别听到的写法；录入期间的话不会交给模型",
+    cn_results: "录到的结果",
+    cn_sample: (i, text, alias) => `第 ${i} 遍：识别为“${text}”→ 称呼 ${alias}`,
+    cn_no_heard: "（没听出称呼）",
+    cn_dup: "已在列表里",
+    cn_take: "把勾选的加入称呼",
+    cn_not_ready: "还没配置好",
+    cn_no_names: "还没有称呼",
+    cn_add_ph: "手动添加一种写法",
+    cn_remove_model: "不再呼叫这个模型",
+    cn_none: "还没有给任何模型配称呼。",
+    cn_taken: "已加入列表，记得点保存",
+    cn_add_title: "再呼叫一个模型",
+    cn_add_note: "只能选已经配置好的模型。要加别的厂商，先到“大模型”页填好接口地址、模型和 API Key。",
+    cn_add_all: "已配置好的模型都加上了。要加别的厂商，先到“大模型”页填好接口地址、模型和 API Key。",
+
+    unknown_val: "未知",
+    commit_short: (s) => `（${s}）`,
+    upd_sub: "和 GitHub 上的版本比较，有新版本时由你决定什么时候更新，不会自动更新。",
+    upd_check: "检查更新",
+    upd_cur: "当前版本",
+    upd_running: "运行中",
+    upd_run_diff: "和当前版本不一样，重启服务后才换成当前版本",
+    upd_branch: "分支",
+    upd_src: "更新来源",
+    upd_src_mid: (b) => ` 的 <code>${b}</code> 分支`,
+    upd_new_title: "新版本",
+    upd_comparing: "正在和 GitHub 比较…（网络不好时最多等 30 秒）",
+    upd_done_ok: (w, f, t) => `${w} 更新成功：${f} → ${t}。`,
+    upd_done_latest: (w) => `${w} 检查过，已经是最新版本，没有改动。`,
+    upd_restart: "代码已更新，但服务是手动启动的，没有自动重启：请在运行网关的终端按 Ctrl+C 停止，再运行 scripts/start.sh。",
+    upd_failed_a: (w, e) => `${w} 更新没有完成：${e}`,
+    upd_failed_b: "。网关仍是原来的版本",
+    upd_output: "更新输出",
+    upd_checked_at: (w) => `检查于 ${w}`,
+    upd_latest: "已经是最新版本",
+    upd_remote_latest: "远端最新：",
+    upd_avail: "有新版本",
+    upd_latest_ver: "最新版本：",
+    update_note: "更新期间网关会重启，一般 1～2 分钟，在线设备会断开一下再自动连上，正在进行的对话会中断。",
+    upd_deps: "依赖有变化时会自动补装；补装失败或新版本起不来时自动退回现在的版本。",
+    upd_now: "立即更新",
+    upd_confirm_a: "现在更新网关吗？",
+    upd_busy_sub: "正在更新，请不要关闭网关或断电。",
+    upd_busy_banner: "正在更新，网关会重启，一般 1～2 分钟。在线设备会断开一下再自动连上，这个页面会自动恢复。",
+    upd_step: "当前步骤：",
+    upd_preparing: "准备中",
+    upd_restarting: "网关正在重启，等它回来…",
+    upd_elapsed: (n) => `已用 ${n} 秒`,
+    upd_slow_suffix: "。新版本启动得比较慢，5 分钟内起不来会自动退回原来的版本",
+    upd_done_toast: (x) => `已更新到 ${x}，页面马上刷新`,
+
+/*ZHEND*/
+  }
+};
+const BOOT_LANG = "__HUB_LANG__";  // Python 在返回页面时替换成 hub 语言；若占位符原样到达浏览器则按 "en"
+let lang = (() => {
+  let s = null;
+  try { s = localStorage.getItem("hubAdminLang"); } catch (e) {}
+  if (s === "en" || s === "zh") return s;
+  return BOOT_LANG === "zh" ? "zh" : "en";
+})();
+const T = (k, ...a) => {
+  let v = STR[lang][k];
+  if (v === undefined) v = STR.en[k];
+  if (v === undefined) return k;
+  return typeof v === "function" ? v(...a) : v;
+};
+const LSEP = () => (lang === "zh" ? "\u3001" : ", ");
+const LOCALE = () => (lang === "zh" ? "zh-CN" : "en-NZ");
+function applyStatic() {
+  document.documentElement.lang = lang === "en" ? "en" : "zh-CN";
+  document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = T(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => { el.placeholder = T(el.dataset.i18nPlaceholder); });
+  document.querySelectorAll("[data-i18n-title]").forEach((el) => { el.title = T(el.dataset.i18nTitle); });
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((el) => { el.setAttribute("aria-label", T(el.dataset.i18nAriaLabel)); });
+  document.querySelectorAll(".lang-btn").forEach((b) => { b.textContent = T("lang_other"); });
+  document.documentElement.style.setProperty("--say-prefix", JSON.stringify(T("say_prefix")));
+}
 
 function toast(msg, isError, ms) {
   toast.count = (toast.count || 0) + 1;
@@ -346,14 +1218,14 @@ function toast(msg, isError, ms) {
 async function api(path, body, quiet) {
   const opts = body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
   let res;
-  try { res = await fetch("/admin/api/" + path, opts); } catch (e) { throw new Error("连不上服务，请确认服务还在运行"); }
+  try { res = await fetch("/admin/api/" + path, opts); } catch (e) { throw new Error(T("conn_error")); }
   let data = {};
   try { data = await res.json(); } catch (e) {}
   if (res.status === 401 && path !== "login") {
-    if (quiet && page.dirty && page.dirty()) { const e = new Error(EXPIRED); e.expired = true; throw e; }
-    page.dirty = null; await route(); throw new Error(EXPIRED + "，请重新登录");
+    if (quiet && page.dirty && page.dirty()) { const e = new Error(EXPIRED()); e.expired = true; throw e; }
+    page.dirty = null; await route(); throw new Error(T("expired_relogin"));
   }
-  if (!res.ok || data.ok === false) throw new Error(data.error || ("请求失败：" + res.status));
+  if (!res.ok || data.ok === false) throw new Error(data.error || T("req_failed", res.status));
   return data;
 }
 
@@ -361,7 +1233,7 @@ async function api(path, body, quiet) {
 async function busy(btn, fn) {
   if (btn.disabled) return;
   btn.disabled = true; btn.classList.add("busy");
-  const hint = btn.textContent.includes("保存") ? "正在保存，请稍等…" : "";
+  const hint = btn.textContent.includes(T("save")) ? T("saving_hint") : "";
   const shown = toast.count;   // the hint never covers the result once it has been shown
   const timer = hint && setTimeout(() => toast.count === shown && toast(hint, false, 60000), 500);
   try { return await fn(); } finally {
@@ -377,7 +1249,7 @@ async function copyText(text) {
     const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select();
     document.execCommand("copy"); ta.remove();
   }
-  toast("已复制");
+  toast(T("copied"));
 }
 
 // 记录表单初始值，用来判断"有没有改过"
@@ -386,6 +1258,7 @@ function snapshot(fn) { const first = JSON.stringify(fn()); return () => JSON.st
 // ---------- 登录与页面切换 ----------
 
 let authMode = "login";
+function authTexts() { $("auth-btn").textContent = authMode === "setup" ? T("setup_enter") : T("login"); }
 async function route() {
   let st;
   try { st = await (await fetch("/admin/api/state")).json(); } catch (e) { return; }
@@ -396,7 +1269,7 @@ async function route() {
     $("app").classList.add("hidden"); $("auth").classList.remove("hidden");
     $("auth-setup").classList.toggle("hidden", authMode !== "setup");
     $("auth-login").classList.toggle("hidden", authMode !== "login");
-    $("auth-btn").textContent = authMode === "setup" ? "设置并进入" : "登录";
+    authTexts();
     $("auth-error").classList.add("hidden");
     $(authMode === "setup" ? "setup-pw" : "login-pw").focus();
     return;
@@ -413,8 +1286,8 @@ $("auth-form").addEventListener("submit", async (ev) => {
   await busy($("auth-btn"), async () => {
     try {
       if (authMode === "setup") {
-        if ($("setup-pw").value.length < 6) return fail("密码至少 6 位");
-        if ($("setup-pw").value !== $("setup-pw2").value) return fail("两次输入的密码不一致");
+        if ($("setup-pw").value.length < 6) return fail(T("pw_short"));
+        if ($("setup-pw").value !== $("setup-pw2").value) return fail(T("pw_mismatch"));
         await api("setup", { password: $("setup-pw").value });
       } else {
         await api("login", { password: $("login-pw").value });
@@ -429,7 +1302,7 @@ $("logout").onclick = async () => { if (!confirmLeave()) return; page.dirty = nu
 const PAGES = { status: renderStatus, how: renderHow, llm: renderLLM, calls: renderCallNames, grokbot: renderGrokBot, memory: renderMemory, asr: renderASR, tts: renderTTS, intent: renderIntent, update: renderUpdate };
 const page = { name: "", dirty: null, timer: null };
 function currentPage() { const p = location.hash.slice(1); return PAGES[p] ? p : "status"; }
-function confirmLeave() { return !(page.dirty && page.dirty()) || confirm("当前页面有修改还没保存，确定离开吗？"); }
+function confirmLeave() { return !(page.dirty && page.dirty()) || confirm(T("confirm_leave")); }
 
 async function openPage(name, force) {
   if (!force && name === page.name) return;
@@ -439,9 +1312,9 @@ async function openPage(name, force) {
   if (location.hash.slice(1) !== name) history.replaceState(null, "", "#" + name);
   document.querySelectorAll("#nav button").forEach((b) => b.classList.toggle("active", b.dataset.page === name));
   const root = $("page");
-  if (!force) root.innerHTML = '<p class="muted">加载中…</p>';
+  if (!force) root.innerHTML = `<p class="muted">${T("loading")}</p>`;
   try { await PAGES[name](root); }
-  catch (e) { root.innerHTML = `<div class="banner err">加载失败：${esc(e.message)}</div>`; }
+  catch (e) { root.innerHTML = `<div class="banner err">${T("load_failed", esc(e.message))}</div>`; }
   if (!force) window.scrollTo(0, 0);
 }
 document.querySelectorAll("#nav button").forEach((b) => (b.onclick = () => openPage(b.dataset.page)));
@@ -449,25 +1322,27 @@ window.addEventListener("hashchange", () => openPage(currentPage()));
 window.addEventListener("beforeunload", (e) => { if (page.dirty && page.dirty()) { e.preventDefault(); e.returnValue = ""; } });
 
 // devices 为 null 表示查不到（连不上服务、登录过期）：不能停在上一次的结果上，否则服务停了还显示"1 台设备在线"
-function setOnline(devices, reason = OFFLINE) {
+let lastOnline = { has: false, devices: null, reason: null };
+function setOnline(devices, reason = OFFLINE()) {
+  lastOnline = { has: true, devices, reason };
   $("online-dot").classList.toggle("on", !!devices && devices.length > 0);
   $("online-dot").classList.toggle("off", !devices);
-  $("online-text").textContent = !devices ? reason : devices.length ? `${devices.length} 台设备在线` : "没有设备在线";
-  $("online-short").textContent = !devices ? (reason === OFFLINE ? "已断开" : "需登录") : devices.length ? `${devices.length} 台` : "无设备";  // 窄屏用
+  $("online-text").textContent = !devices ? reason : devices.length ? T("devices_online", devices.length) : T("no_devices");
+  $("online-short").textContent = !devices ? (reason === OFFLINE() ? T("conn_broken_short") : T("need_login_short")) : devices.length ? T("devices_short", devices.length) : T("no_devices_short");  // 窄屏用
   $("online-dot").parentElement.title = $("online-text").textContent;
 }
-const OFFLINE = "连不上服务";  // api() 连不上服务时抛出的错误以这几个字开头
-const EXPIRED = "登录已过期";
-const isOffline = (e) => String(e && e.message).startsWith(OFFLINE);
+const OFFLINE = () => T("conn_broken");  // api() 连不上服务时抛出的错误以这几个字开头
+const EXPIRED = () => T("expired");
+const isOffline = (e) => String(e && e.message).startsWith(OFFLINE());
 let expiredWarned = false;
 // 后台定时查询出错时：连不上服务、登录过期（页面上有没保存的修改）都要在侧边栏如实显示
 function onDevicesError(e) {
   if (isOffline(e)) return setOnline(null);
   if (!e || !e.expired) return;
-  setOnline(null, EXPIRED);
+  setOnline(null, EXPIRED());
   if (!expiredWarned) {
     expiredWarned = true;
-    toast("登录已过期（服务可能重启过）。页面上还有没保存的修改，保存会失败，请先把它们记下来，再刷新页面重新登录", true);
+    toast(T("expired_unsaved"), true);
   }
 }
 
@@ -485,49 +1360,77 @@ function watchOnline() {
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && onlineTimer) watchOnline(); });
 
+// 切换语言：记住选择、换静态文案、重画当前页（服务端下发的字段不跟着换——一个 hub 默认一种语言）
+function setLang(l) {
+  if (l !== "en" && l !== "zh") return;
+  lang = l;
+  try { localStorage.setItem("hubAdminLang", l); } catch (e) {}
+  applyStatic();
+  authTexts();
+  if (lastOnline.has) setOnline(lastOnline.devices, lastOnline.reason);
+  if (!$("app").classList.contains("hidden") && page.name) openPage(page.name, true);
+}
+document.querySelectorAll(".lang-btn").forEach((b) => { b.onclick = () => setLang(lang === "en" ? "zh" : "en"); });
+
+
 // ---------- 状态 ----------
 
 const MODULE_PAGES = { LLM: "llm", ASR: "asr", TTS: "tts", Intent: "intent" };
-const MODULE_TITLES = { LLM: "大模型", ASR: "语音识别", TTS: "语音合成", Intent: "意图识别" };
-const INTENT_LABEL = { nointent: "不用插件", function_call: "用插件" };
+const moduleTitles = () => ({ LLM: T("nav_llm"), ASR: T("nav_asr"), TTS: T("nav_tts"), Intent: T("nav_intent") });
+const intentLabels = () => ({ nointent: T("intent_none"), function_call: T("intent_on") });
 
 function duration(sec) {
-  if (sec < 60) return "刚刚连接";
-  if (sec < 3600) return `已连接 ${Math.floor(sec / 60)} 分钟`;
-  return `已连接 ${Math.floor(sec / 3600)} 小时 ${Math.floor((sec % 3600) / 60)} 分`;
+  if (sec < 60) return T("just_now");
+  if (sec < 3600) return T("connected_min", Math.floor(sec / 60));
+  return T("connected_hm", Math.floor(sec / 3600), Math.floor((sec % 3600) / 60));
 }
 
 async function renderStatus(root) {
-  const [s, dev, tts] = await Promise.all([api("status"), api("devices"), api("tts")]);
+  const [s, dev, tts, gen] = await Promise.all([api("status"), api("devices"), api("tts"), api("general")]);
   setOnline(dev.devices);
+  const MODULE_TITLES = moduleTitles();
+  const INTENT_LABEL = intentLabels();
   const voice = tts.voices.find((v) => v.value === tts.voice);
   const tiles = Object.entries(s.modules).map(([k, m]) => {
     const value = k === "Intent" ? (INTENT_LABEL[m.type] || m.selected) : m.selected;
-    const detail = k === "TTS" && voice ? `音色：${voice.name}` : k === "Intent" ? m.selected : m.type;
+    const detail = k === "TTS" && voice ? T("voice_label", voice.name) : k === "Intent" ? m.selected : m.type;
     return `<button class="card tile" data-go="${MODULE_PAGES[k]}">
       <div class="k">${MODULE_TITLES[k]}</div><div class="v">${esc(value)}</div>
-      <div class="d">${m.running && m.running !== m.selected ? `<span class="pill warn">运行中仍是 ${esc(m.running)}</span>` : esc(detail)}</div></button>`;
+      <div class="d">${m.running && m.running !== m.selected ? `<span class="pill warn">${T("still_running", esc(m.running))}</span>` : esc(detail)}</div></button>`;
   }).join("");
-  const addr = [["本机 IP", s.addresses.ip], ["OTA 地址", s.addresses.ota], ["管理后台", s.addresses.admin]];
-  const levelPill = { ok: '<span class="pill ok">正常</span>', warn: '<span class="pill warn">注意</span>', error: '<span class="pill err">异常</span>' };
+  const addr = [[T("addr_ip"), s.addresses.ip], [T("addr_ota"), s.addresses.ota], [T("addr_admin"), s.addresses.admin]];
+  const levelPill = { ok: `<span class="pill ok">${T("chk_ok")}</span>`, warn: `<span class="pill warn">${T("chk_warn")}</span>`, error: `<span class="pill err">${T("chk_err")}</span>` };
   const bad = s.checks.filter((c) => c.level !== "ok").length;
   root.innerHTML = `
-    <div class="page-head"><div><h1>状态</h1><p class="sub">服务运行情况、在线设备和连接地址。</p></div>
-      <button class="btn" id="refresh">刷新</button></div>
+    <div class="page-head"><div><h1>${T("nav_status")}</h1><p class="sub">${T("status_sub")}</p></div>
+      <button class="btn" id="refresh">${T("refresh")}</button></div>
     <div class="tiles">${tiles}</div>
-    <div class="section-title">在线设备</div>
+    <div class="section-title">${T("sec_devices")}</div>
     <div class="card" id="devices"></div>
-    <div class="section-title">连接地址</div>
+    <div class="section-title">${T("sec_addr")}</div>
     <div class="card panel">
-      <p class="muted small" style="margin:0 0 12px">设备配网时填写 OTA 地址。请在路由器里给这台电脑设置固定 IP，否则 IP 变了设备会连不上。</p>
+      <p class="muted small" style="margin:0 0 12px">${T("ota_hint")}</p>
       <div class="kv">${addr.map(([k, v]) => `<div class="k">${k}</div><code>${esc(v)}</code>
-        <button class="btn sm copy" data-copy="${esc(v)}">复制</button>`).join("")}</div>
+        <button class="btn sm copy" data-copy="${esc(v)}">${T("copy")}</button>`).join("")}</div>
     </div>
-    <div class="section-title">环境自检 ${bad ? `<span class="pill warn">${bad} 项需要注意</span>` : '<span class="pill ok">全部正常</span>'}</div>
+    <div class="section-title">${T("sec_lang")}</div>
+    <div class="card panel">
+      <p class="muted small" style="margin:0 0 12px">${T("lang_hint")}</p>
+      <div class="kv"><div class="k">${esc(gen.language.label)}</div>
+        <select id="lang-sel">${gen.language.options.map((o) => `<option value="${o.value}"${o.value === gen.language.value ? " selected" : ""}>${esc(o.label)}</option>`).join("")}</select>
+        <button class="btn sm" id="lang-apply">${T("lang_apply")}</button></div>
+    </div>
+    <div class="section-title">${T("env_title")} ${bad ? `<span class="pill warn">${T("env_warn", bad)}</span>` : `<span class="pill ok">${T("env_all_ok")}</span>`}</div>
     <div class="card rows">${s.checks.map((c) => `<div><b>${esc(c.name)}</b>${levelPill[c.level] || ""}<span class="muted">${esc(c.detail)}</span></div>`).join("")}</div>`;
   root.querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => openPage(b.dataset.go)));
   root.querySelectorAll("[data-copy]").forEach((b) => (b.onclick = () => copyText(b.dataset.copy)));
   $("refresh").onclick = (e) => busy(e.target, () => openPage("status", true));
+  $("lang-apply").onclick = (e) => busy(e.target, async () => {
+    const v = $("lang-sel").value;
+    const r = await api("general", { language: v });
+    toast(r.note || "OK");
+    setTimeout(() => location.reload(), 1500);  // BOOT_LANG 是服务端注入的，重开页面才换成新语言
+  });
   renderDevices(dev);
   // 平时每 5 秒查一次；有设备在做表情测试时每 1.5 秒查一次，让进度跟上设备屏幕
   let last = Date.now();
@@ -547,7 +1450,7 @@ function devicesOffline() {
   const box = $("devices");
   if (!box || box.dataset.key === "offline") return;
   box.dataset.key = "offline";
-  box.innerHTML = '<div class="panel muted">连不上服务，设备列表暂停更新。服务恢复后会自动刷新。</div>';
+  box.innerHTML = `<div class="panel muted">${T("devices_paused")}</div>`;
 }
 function renderDevices(dev) {
   lastDevices = dev;
@@ -555,7 +1458,7 @@ function renderDevices(dev) {
   if (!box) return;
   if (!dev.devices.length) {
     box.dataset.key = "";
-    box.innerHTML = '<div class="panel muted">暂无设备在线。唤醒设备后会自动出现在这里。</div>';
+    box.innerHTML = `<div class="panel muted">${T("no_devices_yet")}</div>`;
     return;
   }
   const key = JSON.stringify(dev.devices.map((d) => [d.session_id, d.model_label, d.emotion_test, openEmotion.has(d.session_id)]));  // 设备切了模型也要重绘
@@ -566,20 +1469,20 @@ function renderDevices(dev) {
   box.dataset.key = key;
   box.innerHTML = dev.devices.map((d) => {
     const t = d.emotion_test, open = openEmotion.has(d.session_id), running = t && t.running;
-    const progress = !t ? "点一个表情单独发送，或者依次播放全部，对照设备屏幕看哪些有变化。"
-      : running ? `正在依次播放：第 ${t.index}/${t.total} 个 ${t.emoji} ${esc(t.emotion)}`
-      : t.stopped ? `已停止（播放到第 ${t.index}/${t.total} 个）。` : "依次播放已结束。";
+    const progress = !t ? T("emo_idle")
+      : running ? T("emo_running", t.index, t.total, t.emoji, esc(t.emotion))
+      : t.stopped ? T("emo_stopped", t.index, t.total) : T("emo_done");
     return `<div class="device" data-sid="${esc(d.session_id)}">
-      <div class="device-top"><span class="dot on"></span><b class="mono">${esc(d.device_id || "未知设备")}</b>
-        ${d.model_label ? `<span class="pill" title="这台设备此刻在跟谁说话（叫称呼切换）；和大模型页的全局默认是两回事">当前：${esc(d.model_label)}</span>` : ""}
+      <div class="device-top"><span class="dot on"></span><b class="mono">${esc(d.device_id || T("unknown_device"))}</b>
+        ${d.model_label ? `<span class="pill" title="${T("emo_who_title")}">${T("emo_now", esc(d.model_label))}</span>` : ""}
         <span class="muted small">${esc(d.ip || "")}</span><span class="muted small" data-since="${d.connected_at}">${duration(dev.now - d.connected_at)}</span>
-        <button class="btn sm" data-act="toggle" style="margin-left:auto">${open ? "收起" : "表情测试"}</button></div>
+        <button class="btn sm" data-act="toggle" style="margin-left:auto">${open ? T("collapse") : T("emo_test")}</button></div>
       ${open ? `<p class="muted small" style="margin:10px 0 0">${progress}</p>
         <div class="emogrid">${dev.emotions.map((e) => `<button class="emo ${running && t.emotion === e.emotion ? "now" : ""}" data-emo="${e.emotion}">
           <span>${e.emoji}</span><small>${esc(e.label)}</small></button>`).join("")}</div>
         <div class="actions" style="justify-content:flex-start">
-          <button class="btn sm primary" data-act="all" ${running ? "disabled" : ""}>依次播放全部（每个 2 秒）</button>
-          <button class="btn sm" data-act="stop" ${running ? "" : "disabled"}>停止</button></div>` : ""}
+          <button class="btn sm primary" data-act="all" ${running ? "disabled" : ""}>${T("play_all")}</button>
+          <button class="btn sm" data-act="stop" ${running ? "" : "disabled"}>${T("stop")}</button></div>` : ""}
     </div>`;
   }).join("");
   box.querySelectorAll(".device").forEach((el) => {
@@ -592,15 +1495,16 @@ function renderDevices(dev) {
     if (act("stop")) act("stop").onclick = (e) => busy(e.target, async () => {
       try { await api(url + "emotion-test/stop", {}); await refresh(); } catch (err) { toast(err.message, true); } });
     el.querySelectorAll("[data-emo]").forEach((b) => (b.onclick = async () => {
-      try { await api(url + "emotion", { emotion: b.dataset.emo }); toast(`已发送 ${b.querySelector("span").textContent} ${b.dataset.emo}`); await refresh(); }
+      try { await api(url + "emotion", { emotion: b.dataset.emo }); toast(T("emo_sent", b.querySelector("span").textContent, b.dataset.emo)); await refresh(); }
       catch (err) { toast(err.message, true); }
     }));
   });
 }
 
+
 // ---------- 工作原理 ----------
 
-const SOURCE_PILL = { "服务端": "ok", "Claude Code": "warn" };
+const SOURCE_PILL = { "\u670d\u52a1\u7aef": "ok", "Claude Code": "warn" };  // 键是服务端下发的来源字段（hub 语言），不是界面文案，不翻
 async function renderHow(root) {
   const d = await api("pipeline");
   const f = d.flow, p = d.prompt, m = p.marks;
@@ -608,46 +1512,46 @@ async function renderHow(root) {
   const highlight = (text) => esc(text).replace(markRe, (_, name, value) => {
     const label = p.var_labels[name] || name;
     if (name === "base_prompt") return `<mark class="persona"><i>${esc(label)}</i>${value}</mark>`;
-    return value.trim() ? `<mark title="${esc(name)}"><i>${esc(label)}</i>${value}</mark>` : `<mark title="${esc(name)}"><i>${esc(label)}</i>（空）</mark>`;
+    return value.trim() ? `<mark title="${esc(name)}"><i>${esc(label)}</i>${value}</mark>` : `<mark title="${esc(name)}"><i>${esc(label)}</i>${T("empty_paren")}</mark>`;
   });
   const plain = (text) => text.replace(markRe, (_, name, value) => value);
   const stage = (s) => {
     const body = `<div class="ico">${s.icon}</div><b>${esc(s.title)}</b><span class="mod">${esc(s.value)}</span><small>${esc(s.hint)}</small>`;
-    return s.page ? `<button class="stage" data-go="${esc(s.page)}" title="去设置">${body}</button>` : `<div class="stage static">${body}</div>`;
+    return s.page ? `<button class="stage" data-go="${esc(s.page)}" title="${T("go_setup")}">${body}</button>` : `<div class="stage static">${body}</div>`;
   };
   root.innerHTML = `
-    <div class="page-head"><div><h1>工作原理</h1><p class="sub">说一句话之后会发生什么、可以怎么跟它说话。内容按当前配置生成，修改设置后会跟着变。</p></div></div>
-    <div class="section-title">一句话怎么走 <span class="muted small" style="font-weight:400">点一步去改它的设置</span></div>
+    <div class="page-head"><div><h1>${T("nav_how")}</h1><p class="sub">${T("how_sub")}</p></div></div>
+    <div class="section-title">${T("how_flow_title")} <span class="muted small" style="font-weight:400">${T("how_flow_hint")}</span></div>
     <div class="flow">${f.stages.map((s, i) => `${i ? '<span class="arrow">→</span>' : ""}${stage(s)}`).join("")}</div>
 
-    <div class="section-title">怎么跟它说话</div>
+    <div class="section-title">${T("how_talk_title")}</div>
     <div class="tips">${f.tips.map((t) => `<div class="card tip"><b>${esc(t.title)}</b>
       <div class="say">${esc(t.say)}</div><div class="res">${esc(t.result)}</div></div>`).join("")}</div>
 
-    <div class="section-title">发给大模型的提示词 <span class="muted small" style="font-weight:400">调人设、排查回答不对劲时用得上</span></div>
+    <div class="section-title">${T("how_prompt_title")} <span class="muted small" style="font-weight:400">${T("how_prompt_hint")}</span></div>
     <details class="prompt-all">
-      <summary class="card"><b>发给 ${esc(p.llm)} 的内容</b><span class="pill">${p.segments.length} 段，按顺序拼在一起</span>
-        <span class="toggle">展开 / 收起</span></summary>
+      <summary class="card"><b>${T("sent_to", esc(p.llm))}</b><span class="pill">${T("segs_n", p.segments.length)}</span>
+        <span class="toggle">${T("expand_toggle")}</span></summary>
       ${p.warnings.map((w) => `<div class="banner warn">${esc(w)}</div>`).join("")}
       ${p.segments.map((s, i) => `<details class="card seg-card pseg" ${s.collapsed ? "" : "open"}>
         <summary class="seg-head"><span class="no">${i + 1}</span><b>${esc(s.title)}</b>
-          <span class="pill ${SOURCE_PILL[s.source] ?? ""}">来源：${esc(s.source)}</span><span class="pill">${esc(s.when)}</span>
-          <span class="toggle">展开 / 收起</span></summary>
+          <span class="pill ${SOURCE_PILL[s.source] ?? ""}">${T("src_label", esc(s.source))}</span><span class="pill">${esc(s.when)}</span>
+          <span class="toggle">${T("expand_toggle")}</span></summary>
         <p class="seg-note">${esc(s.note)}</p>
         ${s.text ? `<pre class="prompt-text">${highlight(s.text)}</pre>
-          <div class="actions" style="margin:0;padding:0 22px 14px"><button class="btn sm" data-copyseg="${i}">复制这段</button></div>` : ""}
+          <div class="actions" style="margin:0;padding:0 22px 14px"><button class="btn sm" data-copyseg="${i}">${T("copy_seg")}</button></div>` : ""}
       </details>`).join("")}
-      ${p.actual ? `<details class="card seg-card pseg"><summary class="seg-head"><b>在线设备 ${esc(p.actual.device_id || "")} 实际使用的系统提示词</b>
-          <span class="toggle">展开 / 收起</span></summary>
-        <p class="seg-note">这是这台设备连接时真正生成的版本（第 ${p.segments.findIndex((s) => s.id === "base") + 1} 段），可以和上面的预览对照。</p>
+      ${p.actual ? `<details class="card seg-card pseg"><summary class="seg-head"><b>${T("actual_title", esc(p.actual.device_id || ""))}</b>
+          <span class="toggle">${T("expand_toggle")}</span></summary>
+        <p class="seg-note">${T("actual_note", p.segments.findIndex((s) => s.id === "base") + 1)}</p>
         <pre class="prompt-text">${esc(p.actual.text)}</pre></details>` : ""}
     </details>
 
-    <p class="how-foot">每一步为什么这样设计、连接和 Claude Code 进程什么时候启动和关闭、哪些记录会保存，见 GitHub 上的
-      <a href="${esc(d.design_url)}" target="_blank" rel="noopener">设计细节 ↗</a>。</p>`;
+    <p class="how-foot">${T("how_foot_a")} <a href="${esc(d.design_url)}" target="_blank" rel="noopener">${T("how_foot_link")}</a>${T("how_foot_b")}</p>`;
   root.querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => openPage(b.dataset.go)));
   root.querySelectorAll("[data-copyseg]").forEach((b) => (b.onclick = () => copyText(plain(p.segments[+b.dataset.copyseg].text))));
 }
+
 
 // ---------- 大模型 ----------
 
@@ -660,92 +1564,92 @@ async function renderLLM(root) {
   if (!llmVendor || !d.vendors.find((x) => x.id === llmVendor)) {
     llmVendor = d.vendor || (d.vendors.find((x) => x.configured) || d.vendors[0]).id;
   }
-  const current = usingCli ? `Claude Code · ${v.model || "默认模型"}` : d.kind === "grok" && d.grok.selected ? `Grok Bot · ${d.grok.selected.bot_name}` : active ? `${active.label} · ${active.model}` : d.selected;
+  const current = usingCli ? `Claude Code · ${v.model || T("default_model")}` : d.kind === "grok" && d.grok.selected ? `Grok Bot · ${d.grok.selected.bot_name}` : active ? `${active.label} · ${active.model}` : d.selected;
   const customModel = !!v.model && !c.options.model.find((o) => o.value === v.model);
   const num = (name, label, hint) => `<label class="f">${label}${hint ? `<span class="hint">${hint}</span>` : ""}
     <input class="in" data-k="${name}" value="${esc(v[name] ?? "")}" inputmode="decimal"></label>`;
   // "默认"只是设备刚连上时用的模型；配了称呼的模型随时能叫到，所以每个模型都标出它的称呼
-  const callPill = (entry) => d.call_names_enabled && d.callable[entry] ? `<span class="pill" title="说“嗨 + 称呼”就换成它">称呼：${esc(d.callable[entry].slice(0, 3).join("、"))}${d.callable[entry].length > 3 ? "…" : ""}</span>` : "";
-  const defaultPill = (on) => (on ? '<span class="pill ok">默认模型</span>' : "");
+  const callPill = (entry) => d.call_names_enabled && d.callable[entry] ? `<span class="pill" title="${T("say_hi_swap")}">${T("names_label", esc(d.callable[entry].slice(0, 3).join(LSEP())))}${d.callable[entry].length > 3 ? "…" : ""}</span>` : "";
+  const defaultPill = (on) => (on ? `<span class="pill ok">${T("default_model")}</span>` : "");
   const grokAliases = d.grok.bots.flatMap((g) => (d.callable[g.entry] || []).slice(0, 1));
 
   root.innerHTML = `
-    <div class="page-head"><div><h1>大模型</h1><p class="sub">设备刚连上时用默认模型。给模型配了称呼后，句子开头说“嗨 + 称呼”就换成它，几个模型可以同时用（称呼在<a href="#calls">呼名</a>页配）。</p></div>
-      <span class="pill ${d.kind === "other" ? "warn" : "ok"}">默认：${esc(current)}</span></div>
-    ${d.kind === "other" ? `<div class="banner warn">当前默认的 ${esc(d.selected)} 不在后台管理范围内（可能是手动改了配置文件）。在下面选择一种并点"保存并设为默认"即可切换。</div>` : ""}
-    ${d.running && d.running !== d.selected ? `<div class="banner warn">配置里的默认模型是 ${esc(d.selected)}，但服务仍在用 ${esc(d.running)}。</div>` : ""}
+    <div class="page-head"><div><h1>${T("nav_llm")}</h1><p class="sub">${T("llm_sub_a")}<a href="#calls">${T("nav_calls")}</a>${T("llm_sub_b")}</p></div>
+      <span class="pill ${d.kind === "other" ? "warn" : "ok"}">${T("def_now", esc(current))}</span></div>
+    ${d.kind === "other" ? `<div class="banner warn">${T("other_llm", esc(d.selected))}</div>` : ""}
+    ${d.running && d.running !== d.selected ? `<div class="banner warn">${T("run_diff", esc(d.selected), esc(d.running))}</div>` : ""}
 
-    <div class="section-title">本地 CLI 与智能体 · 用你自己的账号，不走下面的 API Key</div>
+    <div class="section-title">${T("cli_sec")}</div>
     <div class="choices three">
       <div class="choice ${usingCli ? "on" : ""}">
         <div class="mark" style="background:#fef3c7;color:#b45309">C</div>
         <div><b>Claude Code CLI</b> ${defaultPill(usingCli)} ${callPill("ClaudeCLI")}
-          <small>${inst.installed ? esc(`${inst.version} · ${inst.path}`) : '<span style="color:var(--err)">没有找到 Claude Code，请先安装并登录</span>'}</small></div>
+          <small>${inst.installed ? esc(`${inst.version} · ${inst.path}`) : `<span style="color:var(--err)">${T("claude_missing")}</span>`}</small></div>
       </div>
-      <div class="choice off" title="即将支持">
+      <div class="choice off" title="${T("soon")}">
         <div class="mark" style="background:var(--soft);color:var(--muted)">X</div>
-        <div><b>Codex CLI</b> <span class="pill">即将支持</span><small>OpenAI 的本地编程助手</small></div>
+        <div><b>Codex CLI</b> <span class="pill">${T("soon")}</span><small>${T("codex_desc")}</small></div>
       </div>
-      <div class="choice ${d.kind === "grok" ? "on" : ""}" id="grok-choice" style="cursor:pointer" title="打开 Grok Bot 页">
+      <div class="choice ${d.kind === "grok" ? "on" : ""}" id="grok-choice" style="cursor:pointer" title="${T("open_grok")}">
         <div class="mark" style="background:#e0f2fe;color:#0369a1">G</div>
-        <div><b>Grok Bot</b> ${defaultPill(d.kind === "grok")} ${grokAliases.length ? `<span class="pill">称呼：${esc(grokAliases.slice(0, 3).join("、"))}${grokAliases.length > 3 ? "…" : ""}</span>` : ""}
-          <small>${d.grok.bots.length ? `已勾选 ${d.grok.bots.length} 个 Bot${grokAliases.length < d.grok.bots.length ? "，有的还没配称呼" : ""}，叫名字就能派活` : "xAI 的云端 AI 同事：登录、勾选 Bot，叫名字派活，回复念给你听"}</small></div>
+        <div><b>Grok Bot</b> ${defaultPill(d.kind === "grok")} ${grokAliases.length ? `<span class="pill">${T("names_label", esc(grokAliases.slice(0, 3).join(LSEP())))}${grokAliases.length > 3 ? "…" : ""}</span>` : ""}
+          <small>${d.grok.bots.length ? `${T("grok_ticked", d.grok.bots.length)}${grokAliases.length < d.grok.bots.length ? T("grok_unnamed") : ""}${T("grok_saywork")}` : T("grok_desc")}</small></div>
       </div>
     </div>
     <div class="card panel" id="cli-form">
       ${c.exists ? `
-      ${usingCli ? "" : `<div class="banner info">本地 CLI 不是默认模型${active ? `（默认是 ${esc(active.label)}）` : ""}${d.callable.ClaudeCLI ? "，但配了称呼，说“嗨 Claude”就能用它" : ""}。这里改的设置保存后，设备重新连接时生效；想让它当默认模型就点"保存并设为默认"。</div>`}
-      <div class="cli-row"><div class="cli-k">模型</div><div>
+      ${usingCli ? "" : `<div class="banner info">${T("cli_not_default")}${active ? T("def_is", esc(active.label)) : ""}${d.callable.ClaudeCLI ? T("cli_has_name") : ""}${T("cli_tail")}</div>`}
+      <div class="cli-row"><div class="cli-k">${T("model_lbl")}</div><div>
         <div class="seg" data-k="model">${c.options.model.map((o) => `<button type="button" data-v="${o.value}" class="${o.value === v.model ? "on" : ""}">${o.label}<small>${esc(o.hint)}</small></button>`).join("")}
-          <button type="button" data-v="__custom" class="${customModel ? "on" : ""}">自定义<small>填完整模型名</small></button></div>
-        <input class="in mono hidden" id="model-custom" data-k="model_custom" value="${esc(customModel ? v.model : "")}" placeholder="例如 claude-sonnet-5-5" style="max-width:320px">
+          <button type="button" data-v="__custom" class="${customModel ? "on" : ""}">${T("custom")}<small>${T("custom_hint")}</small></button></div>
+        <input class="in mono hidden" id="model-custom" data-k="model_custom" value="${esc(customModel ? v.model : "")}" placeholder="${T("custom_ph")}" style="max-width:320px">
       </div></div>
-      <div class="cli-row"><div class="cli-k">思考级别</div><div>
+      <div class="cli-row"><div class="cli-k">${T("think_level")}</div><div>
         <div class="seg" data-k="effort">${c.options.effort.map((o) => `<button type="button" data-v="${o.value}" class="${o.value === (v.effort || "") ? "on" : ""}">${o.label}</button>`).join("")}</div>
-        <div class="small muted" style="margin-top:6px">越高想得越久、回复越慢。<span id="effort-note" class="hidden" style="color:var(--warn)">超高和最高可能要等十几秒才开口，语音对话不推荐。</span></div>
+        <div class="small muted" style="margin-top:6px">${T("think_note")}<span id="effort-note" class="hidden" style="color:var(--warn)">${T("effort_slow")}</span></div>
       </div></div>
-      <div class="cli-row"><div class="cli-k">权限级别</div><div>
-        ${c.level === "custom" ? '<div class="banner warn" style="margin:0 0 10px">当前的工具和权限模式是手动配置的，和下面三档都对不上。选一档保存后会按这档重新设置。</div>' : ""}
+      <div class="cli-row"><div class="cli-k">${T("perm_level")}</div><div>
+        ${c.level === "custom" ? `<div class="banner warn" style="margin:0 0 10px">${T("perm_custom")}</div>` : ""}
         <div class="levels">${c.options.level.map((lv) => `<button type="button" class="level ${lv.value === c.level ? "on" : ""} ${lv.value}" data-level="${lv.value}">
           <b>${esc(lv.label)}</b><small>${esc(lv.desc)}</small></button>`).join("")}</div>
-        <label class="switch"><input type="checkbox" data-k="web" ${c.web ? "checked" : ""}><span>允许联网搜索</span>
-          <small>可以搜索网页、打开网页，回答实时问题会多等几秒</small></label>
+        <label class="switch"><input type="checkbox" data-k="web" ${c.web ? "checked" : ""}><span>${T("web_on")}</span>
+          <small>${T("web_hint")}</small></label>
       </div></div>
       <div class="grid2" style="margin-top:6px">
-        <label class="f">工作目录<span class="hint">读写文件只能在这个目录里</span><input class="in mono" data-k="workdir" value="${esc(v.workdir || "")}"></label>
-        <label class="f">填充语<span class="hint">回复慢时先说这句，留空关闭</span><input class="in" data-k="first_reply_filler" value="${esc(v.first_reply_filler || "")}"></label>
+        <label class="f">${T("workdir_lbl")}<span class="hint">${T("workdir_hint")}</span><input class="in mono" data-k="workdir" value="${esc(v.workdir || "")}"></label>
+        <label class="f">${T("filler_lbl")}<span class="hint">${T("filler_hint")}</span><input class="in" data-k="first_reply_filler" value="${esc(v.first_reply_filler || "")}"></label>
       </div>
-      <details class="adv"><summary>高级设置（超时、自动接续、当前开放的工具）</summary>
+      <details class="adv"><summary>${T("adv_summary")}</summary>
         <div class="grid3">
-          ${num("turn_timeout_seconds", "单轮超时（秒）", "一个任务最长做多久，默认 600，填 0 不限制")}
-          ${num("stall_timeout_seconds", "无响应超时（秒）", "卡住多久就中断；执行工具时不算，填 0 不检查")}
-          ${num("idle_timeout_seconds", "空闲关闭进程（秒）", "填 0 每轮结束就关闭")}
-          ${num("background_max_seconds", "后台最长（秒）", "打断、断开、单轮超时时 Claude 还在干活就转后台接着做，做完再汇报；最长做多久，默认 7200，填 0 打断就停")}
-          ${num("background_after_seconds", "算作长任务（秒）", "用过工具、或做了这么久才转后台；更短的聊天被打断直接停，默认 30")}
-          ${num("resume_window_minutes", "自动接续（分钟）", "这段时间内重连接着聊，填 0 只在说接续指令时接上")}
-          ${num("filler_delay_seconds", "填充语等待（秒）")}
-          ${num("progress_interval_seconds", "进度提示间隔（秒）", "第一次提示前等多久，之后逐渐拉长到 4 倍；默认 30，填 0 关闭")}
-          <label class="f">进度提示<span class="hint">第一次说这句，之后报已用时间；留空用默认的“还在处理，请稍等”</span>
-            <input class="in" data-k="progress_reply" value="${esc(v.progress_reply || "")}" placeholder="还在处理，请稍等"></label>
-          <label class="f full">接续关键字<span class="hint">超过自动接续时间后，说这些话会接着上次的对话，用逗号分隔</span>
-            <input class="in" data-k="resume_keywords" value="${esc((v.resume_keywords || []).join("，"))}"></label>
-          <label class="f full">CLI 路径<span class="hint">留空自动查找</span><input class="in mono" data-k="cli_path" value="${esc(v.cli_path || "")}"></label>
-          <div class="full"><label class="f">当前开放的工具<span class="hint">由权限级别和联网开关决定，权限模式 ${esc(v.permission_mode || "default")}</span></label>
+          ${num("turn_timeout_seconds", T("turn_to_lbl"), T("turn_to_hint"))}
+          ${num("stall_timeout_seconds", T("stall_lbl"), T("stall_hint"))}
+          ${num("idle_timeout_seconds", T("idle_lbl"), T("idle_hint"))}
+          ${num("background_max_seconds", T("bgmax_lbl"), T("bgmax_hint"))}
+          ${num("background_after_seconds", T("bgafter_lbl"), T("bgafter_hint"))}
+          ${num("resume_window_minutes", T("resume_lbl"), T("resume_hint"))}
+          ${num("filler_delay_seconds", T("fillerwait_lbl"))}
+          ${num("progress_interval_seconds", T("progress_int_lbl"), T("progress_int_hint"))}
+          <label class="f">${T("progress_lbl")}<span class="hint">${T("progress_hint")}</span>
+            <input class="in" data-k="progress_reply" value="${esc(v.progress_reply || "")}" placeholder="${T("progress_ph")}"></label>
+          <label class="f full">${T("resumekw_lbl")}<span class="hint">${T("resumekw_hint")}</span>
+            <input class="in" data-k="resume_keywords" value="${esc((v.resume_keywords || []).join(T("kw_join")))}"></label>
+          <label class="f full">${T("clipath_lbl")}<span class="hint">${T("clipath_hint")}</span><input class="in mono" data-k="cli_path" value="${esc(v.cli_path || "")}"></label>
+          <div class="full"><label class="f">${T("tools_lbl")}<span class="hint">${T("tools_hint", esc(v.permission_mode || "default"))}</span></label>
             <div class="chips">${(v.allowed_tools || []).map((t) => { const info = c.options.tools.find((x) => x.name === t);
               return `<span class="chip on ${info && info.risky ? "risky" : ""}">${esc(t)}${info ? " " + esc(info.label) : ""}</span>`; }).join("")}</div></div>
         </div>
       </details>
       <div class="actions"><span class="result" id="cli-result"></span>
-        <button class="btn" id="cli-reset">撤销修改</button>
-        <button class="btn ${usingCli ? "primary" : ""}" id="cli-save">保存</button>
-        ${usingCli ? "" : `<button class="btn primary" id="cli-use" ${inst.installed ? "" : "disabled"}>保存并设为默认</button>`}
-      </div>` : '<div class="muted">配置文件里没有 ClaudeCLI 条目，请重新运行安装脚本生成配置。</div>'}
+        <button class="btn" id="cli-reset">${T("undo")}</button>
+        <button class="btn ${usingCli ? "primary" : ""}" id="cli-save">${T("save")}</button>
+        ${usingCli ? "" : `<button class="btn primary" id="cli-use" ${inst.installed ? "" : "disabled"}>${T("save_default")}</button>`}
+      </div>` : `<div class="muted">${T("cli_missing")}</div>`}
     </div>
 
-    <div class="section-title">API Key · 云端模型，统一走 OpenAI 协议</div>
+    <div class="section-title">${T("api_sec")}</div>
     <div class="vendors">${d.vendors.map((x) => `<button class="vendor ${x.id === llmVendor ? "on" : ""} ${d.vendor === x.id ? "using" : ""}" data-vendor="${x.id}">
       <i class="${x.configured ? "set" : ""}"></i><b>${esc(x.label)}</b>
-      <small>${d.vendor === x.id ? "✓ 默认" : x.configured ? (d.callable[x.entry] ? `称呼：${esc(d.callable[x.entry][0])}` : "已配置") : "未配置"}</small></button>`).join("")}</div>
+      <small>${d.vendor === x.id ? T("v_default") : x.configured ? (d.callable[x.entry] ? T("name1_label", esc(d.callable[x.entry][0])) : T("configured")) : T("not_set")}</small></button>`).join("")}</div>
     <div class="card panel" id="api-form"></div>`;
 
   $("grok-choice").onclick = () => openPage("grokbot");
@@ -774,9 +1678,7 @@ async function renderLLM(root) {
     }));
     form.querySelectorAll("[data-level]").forEach((b) => (b.onclick = () => {
       const lv = b.dataset.level;
-      if (lv !== "read" && !b.classList.contains("on") && !confirm(lv === "auto"
-          ? "Auto：Claude 可以在电脑上执行命令，由它自己判断风险，低风险的会自动执行。语音可能被误识别，确定开启吗？"
-          : "可编辑：Claude 可以在工作目录里新建和修改文件，不再询问。确定开启吗？")) return;
+      if (lv !== "read" && !b.classList.contains("on") && !confirm(lv === "auto" ? T("lvl_auto_confirm") : T("lvl_edit_confirm"))) return;
       form.querySelectorAll("[data-level]").forEach((x) => x.classList.toggle("on", x === b));
     }));
     syncModel(); syncEffort();
@@ -785,7 +1687,7 @@ async function renderLLM(root) {
     $("cli-save").onclick = (e) => busy(e.target, async () => {
       try {
         const r = await api("llm/claude", cliValues());
-        toast(r.changed.length ? r.note : "没有修改", r.failed); page.dirty = null; await openPage("llm", true);
+        toast(r.changed.length ? r.note : T("nochange"), r.failed); page.dirty = null; await openPage("llm", true);
       } catch (err) { result(`<span style="color:var(--err)">${esc(err.message)}</span>`); }
     });
     if ($("cli-use")) $("cli-use").onclick = (e) => busy(e.target, async () => {
@@ -803,37 +1705,37 @@ async function renderLLM(root) {
     const x = d.vendors.find((y) => y.id === llmVendor), using = d.vendor === x.id;
     const box = $("api-form");
     box.innerHTML = `
-      ${using ? "" : `<div class="banner info">${esc(x.label)} 不是默认模型${active ? `（默认是 ${esc(active.label)}）` : ""}${d.callable[x.entry] ? `，但配了称呼“${esc(d.callable[x.entry][0])}”，叫名字就能用它` : "。填好保存后到呼名页配上称呼，就能叫名字用它"}；想让它当默认模型就点"保存并设为默认"。</div>`}
-      ${x.conflict ? `<div class="banner err">配置里已有一个叫 ${esc(x.entry)} 的条目，但不是 OpenAI 兼容类型，请在配置文件里改名或删掉它。</div>` : ""}
+      ${using ? "" : `<div class="banner info">${T("api_not_default", esc(x.label))}${active ? T("def_is", esc(active.label)) : ""}${d.callable[x.entry] ? T("api_has_name", esc(d.callable[x.entry][0])) : T("api_no_name")}${T("api_tail")}</div>`}
+      ${x.conflict ? `<div class="banner err">${T("conflict_openai", esc(x.entry))}</div>` : ""}
       ${x.hint ? `<div class="banner info">${esc(x.hint)}</div>` : ""}
       <div class="grid2">
-        <label class="f">接口地址<input class="in mono" id="api-url" value="${esc(x.base_url)}" placeholder="https://…/v1"></label>
-        <label class="f">模型${x.models.length ? '<span class="hint">可从列表选，也可以手填</span>' : ""}
-          <input class="in mono" id="api-model" value="${esc(x.model)}" list="api-models" placeholder="模型名称">
+        <label class="f">${T("url_lbl")}<input class="in mono" id="api-url" value="${esc(x.base_url)}" placeholder="https://…/v1"></label>
+        <label class="f">${T("model_lbl")}${x.models.length ? `<span class="hint">${T("models_hint")}</span>` : ""}
+          <input class="in mono" id="api-model" value="${esc(x.model)}" list="api-models" placeholder="${T("model_ph")}">
           <datalist id="api-models">${x.models.map((m) => `<option value="${esc(m)}">`).join("")}</datalist></label>
-        <label class="f full">API Key${x.id === "custom" ? '<span class="hint">本机服务不需要 Key 时可以留空</span>' : ""}
+        <label class="f full">API Key${x.id === "custom" ? `<span class="hint">${T("apikey_hint")}</span>` : ""}
           <input class="in mono" id="api-key" type="password" autocomplete="off"
-            placeholder="${x.key_set ? `已设置 ${esc(x.key_hint)}，输入新值可替换` : "未设置，粘贴后保存"}"></label>
+            placeholder="${x.key_set ? T("key_set", esc(x.key_hint)) : T("key_uns")}"></label>
       </div>
-      <p class="muted small" style="margin:8px 0 0">Key 只保存在这台电脑的配置文件里，页面上只显示首尾 4 位。</p>
+      <p class="muted small" style="margin:8px 0 0">${T("key_note")}</p>
       <div class="actions"><span class="result" id="api-result"></span>
-        <button class="btn" id="api-test">测试连接</button>
-        <button class="btn ${using ? "primary" : ""}" id="api-save">保存</button>
-        ${using ? "" : '<button class="btn primary" id="api-use">保存并设为默认</button>'}</div>`;
+        <button class="btn" id="api-test">${T("test_conn")}</button>
+        <button class="btn ${using ? "primary" : ""}" id="api-save">${T("save")}</button>
+        ${using ? "" : `<button class="btn primary" id="api-use">${T("save_default")}</button>`}</div>`;
     const values = () => ({ base_url: $("api-url").value.trim(), model: $("api-model").value.trim(), api_key: $("api-key").value.trim() });
     apiDirty = snapshot(values);
     const result = (html) => ($("api-result").innerHTML = html);
     const bad = (msg) => result(`<span style="color:var(--err)">${esc(msg)}</span>`);
     $("api-test").onclick = (e) => busy(e.target, async () => {
-      result('<span class="muted">正在发一句话测试（推理型模型要先想一会儿，最多等一分钟）…</span>');
+      result(`<span class="muted">${T("testing_llm")}</span>`);
       try {
         const r = await api(`llm/vendors/${x.id}/test`, values());
-        result(`<span style="color:var(--ok)">✓ 连接正常，${r.seconds < 1 ? "不到 1 秒" : r.seconds + " 秒"}收到回复“${esc(r.reply)}”</span>`);
+        result(`<span style="color:var(--ok)">${T("test_ok", r.seconds < 1 ? T("under_1s") : T("secs", r.seconds), esc(r.reply))}</span>`);
       }
       catch (err) { bad(err.message); }
     });
     $("api-save").onclick = (e) => busy(e.target, async () => {
-      try { const r = await api(`llm/vendors/${x.id}`, values()); toast(r.changed.length ? r.note : "没有修改", r.failed); page.dirty = null; await openPage("llm", true); }
+      try { const r = await api(`llm/vendors/${x.id}`, values()); toast(r.changed.length ? r.note : T("nochange"), r.failed); page.dirty = null; await openPage("llm", true); }
       catch (err) { bad(err.message); }
     });
     if ($("api-use")) $("api-use").onclick = (e) => busy(e.target, async () => {
@@ -845,7 +1747,7 @@ async function renderLLM(root) {
     });
   };
   root.querySelectorAll("[data-vendor]").forEach((b) => (b.onclick = () => {
-    if (apiDirty() && !confirm("这个厂商的修改还没保存，确定切换吗？")) return;
+    if (apiDirty() && !confirm(T("confirm_vendor"))) return;
     llmVendor = b.dataset.vendor;
     root.querySelectorAll("[data-vendor]").forEach((y) => y.classList.toggle("on", y === b));
     renderApi();
@@ -854,6 +1756,7 @@ async function renderLLM(root) {
   page.dirty = () => cliDirty() || apiDirty();
 }
 
+
 // ---------- 语音识别 ----------
 
 let asrView = null;  // 正在查看的识别方式：local / doubao
@@ -861,28 +1764,28 @@ async function renderASR(root) {
   const d = await api("asr");
   const b = d.doubao, lm = d.local.model;
   if (!asrView) asrView = d.choice === "doubao" ? "doubao" : "local";
-  const tag = (using, ok) => using ? '<span class="pill ok">使用中</span>' : ok ? '<span class="pill">已配置</span>' : '<span class="pill">未配置</span>';
+  const tag = (using, ok) => using ? `<span class="pill ok">${T("in_use")}</span>` : ok ? `<span class="pill">${T("configured")}</span>` : `<span class="pill">${T("not_set")}</span>`;
   root.innerHTML = `
-    <div class="page-head"><div><h1>语音识别</h1><p class="sub">把设备说的话转成文字。一次只能用一种：本地识别，或者豆包云端识别。</p></div>
-      <span class="pill ok">当前：${esc(d.selected)}</span></div>
-    ${d.choice === "other" ? `<div class="banner warn">当前使用的 ${esc(d.selected)} 不在后台管理范围内（可能是手动改了配置文件）。在下面选择一种并使用即可切换。</div>` : ""}
-    ${d.running && d.running !== d.selected ? `<div class="banner warn">配置里选的是 ${esc(d.selected)}，但服务仍在使用 ${esc(d.running)}，重启服务后生效。</div>` : ""}
+    <div class="page-head"><div><h1>${T("nav_asr")}</h1><p class="sub">${T("asr_sub")}</p></div>
+      <span class="pill ok">${T("current_label", esc(d.selected))}</span></div>
+    ${d.choice === "other" ? `<div class="banner warn">${T("other_asr", esc(d.selected))}</div>` : ""}
+    ${d.running && d.running !== d.selected ? `<div class="banner warn">${T("asr_running", esc(d.selected), esc(d.running))}</div>` : ""}
     <div class="choices">
       <button class="choice ${asrView === "local" ? "on" : ""}" data-asr="local">
-        <div class="mark" style="background:var(--accent-soft);color:var(--accent)">本</div>
-        <div><b>本地 X-ASR</b> ${tag(d.choice === "local", d.local.exists && lm && lm.ok)}
-          <small>中英混合，在这台电脑上识别，不需要联网</small></div></button>
+        <div class="mark" style="background:var(--accent-soft);color:var(--accent)">${T("mark_local")}</div>
+        <div><b>${T("local_title")}</b> ${tag(d.choice === "local", d.local.exists && lm && lm.ok)}
+          <small>${T("local_desc")}</small></div></button>
       <button class="choice ${asrView === "doubao" ? "on" : ""}" data-asr="doubao">
-        <div class="mark" style="background:#e0f2fe;color:#0369a1">豆</div>
-        <div><b>豆包流式语音识别</b> ${tag(d.choice === "doubao", b.configured)}
-          <small>火山引擎云端识别，边说边识别；需要开通服务，按用量付费</small></div></button>
+        <div class="mark" style="background:#e0f2fe;color:#0369a1">${T("mark_doubao")}</div>
+        <div><b>${T("doubao_title")}</b> ${tag(d.choice === "doubao", b.configured)}
+          <small>${T("doubao_desc")}</small></div></button>
     </div>
     <div class="card panel" id="asr-form"></div>
     ${vadCard(d.vad)}
     ${hotwordsCard(d.hotwords)}
     <div class="card" style="margin-top:16px" id="cor-card"></div>
     ${recentCard(d.recent)}
-    <p class="muted small" style="margin-top:14px">其他语音识别方案（阿里、讯飞、其他本地模型）暂不支持在后台设置。</p>`;
+    <p class="muted small" style="margin-top:14px">${T("asr_other")}</p>`;
   let formDirty = () => false;
   const use = (btn, choice, before) => busy(btn, async () => {
     try {
@@ -895,43 +1798,42 @@ async function renderASR(root) {
     const box = $("asr-form");
     if (asrView === "local") {
       const using = d.choice === "local";
-      box.innerHTML = !d.local.exists ? '<div class="muted">配置文件里没有 SherpaXASR 条目，请重新运行安装脚本生成配置。</div>' : `
+      box.innerHTML = !d.local.exists ? `<div class="muted">${T("sherpa_missing")}</div>` : `
         <p style="margin:0 0 14px">${esc(d.local.label)}</p>
         <div class="kv" style="grid-template-columns:max-content minmax(0,1fr)">
           ${using ? d.info.map((i) => `<div class="k">${esc(i.label)}</div><code>${esc(i.value)}</code>`).join("") : ""}
-          ${lm ? `<div class="k">模型文件</div><div style="color:${lm.ok ? "var(--ok)" : "var(--err)"}">${esc(lm.detail)}</div>` : ""}
+          ${lm ? `<div class="k">${T("model_files")}</div><div style="color:${lm.ok ? "var(--ok)" : "var(--err)"}">${esc(lm.detail)}</div>` : ""}
         </div>
-        ${using ? "" : `<div class="actions"><span class="result muted">切换后新连接马上生效，在线设备重新连接后生效。</span>
-          <button class="btn primary" id="local-use" ${lm && lm.ok ? "" : "disabled"}>使用本地 X-ASR</button></div>`}`;
+        ${using ? "" : `<div class="actions"><span class="result muted">${T("switch_note")}</span>
+          <button class="btn primary" id="local-use" ${lm && lm.ok ? "" : "disabled"}>${T("use_local")}</button></div>`}`;
       formDirty = () => false;
       if ($("local-use")) $("local-use").onclick = (e) => use(e.target, "local");
       return;
     }
     const using = d.choice === "doubao";
     box.innerHTML = `
-      ${b.conflict ? `<div class="banner err">配置里已有一个叫 ${esc(b.entry)} 的条目，但不是豆包流式识别，请在配置文件里改名或删掉它。</div>` : ""}
-      <p style="margin:0 0 14px">在<a href="https://console.volcengine.com/speech/service/10038" target="_blank" rel="noopener">火山引擎控制台</a>开通“豆包流式语音识别模型 2.0”后，把密钥填在这里。
-        新版控制台只有一个 API Key；旧版控制台是 APP ID 加 Access Token。</p>
-      <div class="cli-row"><div class="cli-k">控制台版本</div><div>
-        <div class="seg" id="db-auth"><button type="button" data-v="key" class="${b.auth === "key" ? "on" : ""}">新版 · API Key</button>
-          <button type="button" data-v="app" class="${b.auth === "app" ? "on" : ""}">旧版 · APP ID + Access Token</button></div></div></div>
+      ${b.conflict ? `<div class="banner err">${T("conflict_doubao", esc(b.entry))}</div>` : ""}
+      <p style="margin:0 0 14px">${T("doubao_intro_a")}<a href="https://console.volcengine.com/speech/service/10038" target="_blank" rel="noopener">${T("volcano_console")}</a>${T("doubao_intro_b")}</p>
+      <div class="cli-row"><div class="cli-k">${T("console_ver")}</div><div>
+        <div class="seg" id="db-auth"><button type="button" data-v="key" class="${b.auth === "key" ? "on" : ""}">${T("console_new")}</button>
+          <button type="button" data-v="app" class="${b.auth === "app" ? "on" : ""}">${T("console_old")}</button></div></div></div>
       <div class="grid2" style="margin-top:6px">
         <label class="f full" data-auth="key">API Key
           <input class="in mono" id="db-key" type="password" autocomplete="off"
-            placeholder="${b.key_set ? `已设置 ${esc(b.key_hint)}，输入新值可替换` : "未设置，粘贴后保存"}"></label>
-        <label class="f" data-auth="app">APP ID<input class="in mono" id="db-appid" value="${esc(b.appid)}" placeholder="一串数字"></label>
+            placeholder="${b.key_set ? T("key_set", esc(b.key_hint)) : T("key_uns")}"></label>
+        <label class="f" data-auth="app">APP ID<input class="in mono" id="db-appid" value="${esc(b.appid)}" placeholder="${T("digits_ph")}"></label>
         <label class="f" data-auth="app">Access Token
           <input class="in mono" id="db-token" type="password" autocomplete="off"
-            placeholder="${b.token_set ? `已设置 ${esc(b.token_hint)}，输入新值可替换` : "未设置，粘贴后保存"}"></label>
+            placeholder="${b.token_set ? T("key_set", esc(b.token_hint)) : T("key_uns")}"></label>
       </div>
-      <div class="cli-row" style="margin-top:6px"><div class="cli-k">计费方式</div><div>
+      <div class="cli-row" style="margin-top:6px"><div class="cli-k">${T("billing")}</div><div>
         <div class="seg" id="db-res">${b.resources.map((r) => `<button type="button" data-v="${esc(r.value)}" class="${r.value === b.resource_id ? "on" : ""}">${esc(r.label)}<small>${esc(r.hint)}</small></button>`).join("")}</div>
-        <div class="small muted" style="margin-top:6px">要和控制台里开通的一致，不一致会提示鉴权失败。</div></div></div>
-      <p class="muted small" style="margin:8px 0 0">密钥只保存在这台电脑的配置文件里，页面上只显示首尾 4 位。下面的热词会直接带给豆包；识别后纠错照常生效。</p>
+        <div class="small muted" style="margin-top:6px">${T("billing_note")}</div></div></div>
+      <p class="muted small" style="margin:8px 0 0">${T("doubao_secret_note")}</p>
       <div class="actions"><span class="result" id="db-result"></span>
-        <button class="btn" id="db-test">测试连接</button>
-        <button class="btn ${using ? "primary" : ""}" id="db-save">保存</button>
-        ${using ? "" : '<button class="btn primary" id="db-use">保存并使用</button>'}</div>`;
+        <button class="btn" id="db-test">${T("test_conn")}</button>
+        <button class="btn ${using ? "primary" : ""}" id="db-save">${T("save")}</button>
+        ${using ? "" : `<button class="btn primary" id="db-use">${T("save_use")}</button>`}</div>`;
     const seg = (id) => ($(id).querySelector(".on") || {}).dataset?.v || "";
     const syncAuth = () => box.querySelectorAll("[data-auth]").forEach((el) => el.classList.toggle("hidden", el.dataset.auth !== seg("db-auth")));
     box.querySelectorAll(".seg button").forEach((x) => (x.onclick = () => {
@@ -945,21 +1847,21 @@ async function renderASR(root) {
     const result = (html) => ($("db-result").innerHTML = html);
     const bad = (msg) => result(`<span style="color:var(--err)">${esc(msg)}</span>`);
     $("db-test").onclick = (e) => busy(e.target, async () => {
-      result('<span class="muted">正在连接豆包识别服务…</span>');
+      result(`<span class="muted">${T("db_connecting")}</span>`);
       try {
         const r = await api("asr/doubao/test", values());
-        result(`<span style="color:var(--ok)">✓ 连接正常，${r.seconds < 1 ? "不到 1 秒" : r.seconds + " 秒"}收到回应</span>`);
+        result(`<span style="color:var(--ok)">${T("db_ok", r.seconds < 1 ? T("under_1s") : T("secs", r.seconds))}</span>`);
       } catch (err) { bad(err.message); }
     });
     $("db-save").onclick = (e) => busy(e.target, async () => {
-      try { const r = await api("asr/doubao", values()); toast(r.changed.length ? r.note : "没有修改", r.failed); page.dirty = null; await openPage("asr", true); }
+      try { const r = await api("asr/doubao", values()); toast(r.changed.length ? r.note : T("nochange"), r.failed); page.dirty = null; await openPage("asr", true); }
       catch (err) { bad(err.message); }
     });
     if ($("db-use")) $("db-use").onclick = (e) => use(e.target, "doubao", () => api("asr/doubao", values()));
   };
   root.querySelectorAll("[data-asr]").forEach((x) => (x.onclick = () => {
     if (x.dataset.asr === asrView) return;
-    if (formDirty() && !confirm("这里的修改还没保存，确定切换吗？")) return;
+    if (formDirty() && !confirm(T("confirm_switch_here"))) return;
     asrView = x.dataset.asr;
     root.querySelectorAll("[data-asr]").forEach((y) => y.classList.toggle("on", y === x));
     renderForm();
@@ -974,7 +1876,7 @@ async function renderASR(root) {
 let asrChecks = [];
 const saveAndReload = (target, path, body, own) => {
   if (asrChecks.some((f) => f && f !== own && f())
-      && !confirm("其他卡片还有没保存的修改，保存这里后页面会刷新，那些修改会丢掉。继续吗？")) return;
+      && !confirm(T("confirm_other_cards"))) return;
   return busy(target, async () => {
     try { const r = await api(path, body); toast(r.note, r.failed); page.dirty = null; await openPage("asr", true); }
     catch (err) { toast(err.message, true); }
@@ -994,17 +1896,16 @@ function bindVad(v) {
 function hotwordsCard(h) {
   return `
     <div class="card" style="margin-top:16px">
-      <div class="card-head"><h2>热词</h2><span class="pill">${h.words.length + h.auto.length} 个</span></div>
+      <div class="card-head"><h2>${T("hw_title")}</h2><span class="pill">${T("count_ge", h.words.length + h.auto.length)}</span></div>
       <div class="panel ${h.supported ? "" : "disabled-area"}">
-        <p style="margin:0">容易认错的专有名词，识别时优先考虑，比如 GitHub、StackChan。只能把发音接近的词救回来；发音完全一样的（Claude 总被听成 cloud），用下面的“识别后纠错”。
-          写原本的大小写，一个词一项，不要太多（几十个以内），太多反而容易误认。</p>
+        <p style="margin:0">${T("hw_intro")}</p>
         <div class="chips" id="hw-chips"></div>
-        ${h.auto.length ? `<p class="muted small" style="margin:10px 0 0">虚线的来自<a href="#calls">呼名</a>里的模型名字，自动带上，在呼名页修改。</p>` : ""}
-        ${h.dropped.length ? `<div class="banner warn" style="margin:10px 0 0">豆包一次最多带约 100 个 token 的热词，超出了，这 ${h.dropped.length} 个不会带上：${esc(h.dropped.join("、"))}。呼名里的模型名字会优先带上。</div>` : ""}
+        ${h.auto.length ? `<p class="muted small" style="margin:10px 0 0">${T("hw_auto_a")}<a href="#calls">${T("nav_calls")}</a>${T("hw_auto_b")}</p>` : ""}
+        ${h.dropped.length ? `<div class="banner warn" style="margin:10px 0 0">${T("hw_dropped", h.dropped.length, esc(h.dropped.join(LSEP())))}</div>` : ""}
         <div style="display:flex;gap:8px;margin-top:12px;max-width:440px">
-          <input class="in" id="hw-new" placeholder="添加热词，回车确认" ${h.supported ? "" : "disabled"}><button class="btn sm" id="hw-add" ${h.supported ? "" : "disabled"}>添加</button></div>
-        <div class="actions"><span class="result muted">${h.supported ? "保存后重新加载语音识别：新连接马上生效，在线设备重新连接后生效。" : "当前语音识别不支持热词，支持的有本地 X-ASR、豆包。"}</span>
-          <button class="btn primary" id="hw-save" ${h.supported ? "" : "disabled"}>保存热词</button></div>
+          <input class="in" id="hw-new" placeholder="${T("hw_ph")}" ${h.supported ? "" : "disabled"}><button class="btn sm" id="hw-add" ${h.supported ? "" : "disabled"}>${T("add")}</button></div>
+        <div class="actions"><span class="result muted">${h.supported ? T("hw_result_ok") : T("hw_result_unsupported")}</span>
+          <button class="btn primary" id="hw-save" ${h.supported ? "" : "disabled"}>${T("hw_save")}</button></div>
       </div>
     </div>`;
 }
@@ -1014,15 +1915,15 @@ function bindHotwords(h) {
   const words = [...h.words];
   const draw = () => {
     $("hw-chips").innerHTML = words.map((w, i) => `<span class="chip on">${esc(w)}
-        <button class="chip-x" data-del="${i}" title="删除" aria-label="删除 ${esc(w)}">×</button></span>`).join("")
-      + h.auto.map((w) => `<span class="chip risky" title="来自呼名">${esc(w)}</span>`).join("")
-      || '<span class="muted small">还没有热词</span>';
+        <button class="chip-x" data-del="${i}" title="${T("del")}" aria-label="${T("del_named", esc(w))}">×</button></span>`).join("")
+      + h.auto.map((w) => `<span class="chip risky" title="${T("from_calls")}">${esc(w)}</span>`).join("")
+      || `<span class="muted small">${T("hw_none")}</span>`;
     $("hw-chips").querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { words.splice(+b.dataset.del, 1); draw(); }));
   };
   const add = () => {
     const input = $("hw-new"), w = input.value.replace(/\s+/g, " ").trim();
     if (!w) return;
-    if (/[,，]/.test(w)) { toast("一个词一项，不要用逗号", true); return; }
+    if (/[,，]/.test(w)) { toast(T("hw_comma"), true); return; }
     if (![...words, ...h.auto].some((x) => x.toLowerCase() === w.toLowerCase())) words.push(w);
     input.value = ""; draw();
   };
@@ -1042,30 +1943,29 @@ function bindCorrections(list) {
   const card = $("cor-card");
   const draw = () => {
     card.innerHTML = `
-      <div class="card-head"><h2>识别后纠错</h2><span class="pill">${items.length} 条</span></div>
+      <div class="card-head"><h2>${T("cor_title")}</h2><span class="pill">${T("count_tiao", items.length)}</span></div>
       <div class="panel">
-        <p style="margin:0">识别出文字后，把认错的写法换成正确的，再交给大模型和设备显示。不区分大小写，中英文之间有没有空格都算；英文按整词替换，“cloud code” 不会改到 “cloud coder” 里。
-          认错的写法至少 2 个字，太短容易误改普通的话。</p>
+        <p style="margin:0">${T("cor_intro")}</p>
         ${items.map((it, i) => `
           <div class="cor-row" data-row="${i}" style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px">
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <span class="muted small">改成</span><input class="in" data-target value="${esc(it.target)}" style="max-width:220px">
-              <button class="btn sm" data-del-row title="删除这一条">删除</button></div>
+              <span class="muted small">${T("fix_to")}</span><input class="in" data-target value="${esc(it.target)}" style="max-width:220px">
+              <button class="btn sm" data-del-row title="${T("del_row")}">${T("del")}</button></div>
             <div class="chips">${it.aliases.map((a, j) => `<span class="chip on">${esc(a)}
-              <button class="chip-x" data-del="${j}" title="删除" aria-label="删除 ${esc(a)}">×</button></span>`).join("")}</div>
+              <button class="chip-x" data-del="${j}" title="${T("del")}" aria-label="${T("del_named", esc(a))}">×</button></span>`).join("")}</div>
             <div style="display:flex;gap:8px;margin-top:10px;max-width:440px">
-              <input class="in" data-new placeholder="再加一种认错的写法"><button class="btn sm" data-add>添加</button></div>
+              <input class="in" data-new placeholder="${T("cor_new_ph")}"><button class="btn sm" data-add>${T("add")}</button></div>
           </div>`).join("")}
         <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px">
-          <div class="section-title" style="margin-top:0">新增一条</div>
+          <div class="section-title" style="margin-top:0">${T("cor_addsec")}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <input class="in" id="cor-alias" placeholder="认错的写法，如 cloud code" style="max-width:240px">
-            <span class="muted small">改成</span>
-            <input class="in" id="cor-target" placeholder="正确写法，如 Claude Code" style="max-width:240px">
-            <button class="btn sm" id="cor-add">添加</button></div>
+            <input class="in" id="cor-alias" placeholder="${T("cor_alias_ph")}" style="max-width:240px">
+            <span class="muted small">${T("fix_to")}</span>
+            <input class="in" id="cor-target" placeholder="${T("cor_target_ph")}" style="max-width:240px">
+            <button class="btn sm" id="cor-add">${T("add")}</button></div>
         </div>
-        <div class="actions"><span class="result muted">保存后马上生效，在线设备不用重新连接。</span>
-          <button class="btn primary" id="cor-save">保存纠错表</button></div>
+        <div class="actions"><span class="result muted">${T("save_now")}</span>
+          <button class="btn primary" id="cor-save">${T("cor_save")}</button></div>
       </div>`;
     card.querySelectorAll("[data-row]").forEach((row) => {
       const it = items[+row.dataset.row];
@@ -1079,7 +1979,7 @@ function bindCorrections(list) {
     });
     $("cor-add").onclick = () => {
       const alias = $("cor-alias").value.trim(), target = $("cor-target").value.trim();
-      if (!alias || !target) { toast("认错的写法和正确写法都要填", true); return; }
+      if (!alias || !target) { toast(T("cor_fill"), true); return; }
       const same = items.find((x) => x.target.toLowerCase() === target.toLowerCase());
       if (same) { if (!same.aliases.some((x) => x.toLowerCase() === alias.toLowerCase())) same.aliases.push(alias); }
       else items.push({ target, aliases: [alias] });
@@ -1095,20 +1995,20 @@ function bindCorrections(list) {
 // ---------- 最近识别 ----------
 
 function recentCard(list) {
-  const time = (t) => new Date(t * 1000).toLocaleTimeString("zh-CN", { hour12: false });
+  const time = (t) => new Date(t * 1000).toLocaleTimeString(LOCALE(), { hour12: false });
   return `
     <div class="card" style="margin-top:16px">
-      <div class="card-head"><h2>最近识别</h2><span><span class="pill">${list.length} 句</span>
-        <button class="btn sm" id="recent-refresh" style="margin-left:6px">刷新</button></span></div>
+      <div class="card-head"><h2>${T("recent_title")}</h2><span><span class="pill">${T("lines_n", list.length)}</span>
+        <button class="btn sm" id="recent-refresh" style="margin-left:6px">${T("refresh")}</button></span></div>
       <div class="panel">
-        <p class="muted small" style="margin:0">最近 30 句识别结果，只保存在内存里，重启服务后清空。看到认错的词，先用鼠标选中那几个字，再点“加热词”或“加纠错”；不选就带上整句（加纠错时带纠错前的原文），再自己删改。</p>
+        <p class="muted small" style="margin:0">${T("recent_note")}</p>
         ${list.length ? list.map((x, i) => `
           <div data-recent="${i}" data-raw="${esc(x.raw)}" style="display:flex;gap:10px;align-items:flex-start;border-top:1px solid var(--line);margin-top:10px;padding-top:10px">
             <span class="muted small" style="flex:none;width:64px">${esc(time(x.time))}</span>
             <div style="flex:1;min-width:0"><div data-text>${esc(x.text)}</div>
-              ${x.raw !== x.text ? `<div class="muted small">纠错前：${esc(x.raw)}</div>` : ""}</div>
-            <span style="flex:none;display:flex;gap:6px"><button class="btn sm" data-to="hw">加热词</button><button class="btn sm" data-to="cor">加纠错</button></span>
-          </div>`).join("") : '<p class="muted small" style="margin:12px 0 0">还没有识别记录。跟设备说几句话后刷新本页。</p>'}
+              ${x.raw !== x.text ? `<div class="muted small">${T("before_fix", esc(x.raw))}</div>` : ""}</div>
+            <span style="flex:none;display:flex;gap:6px"><button class="btn sm" data-to="hw">${T("to_hw")}</button><button class="btn sm" data-to="cor">${T("to_cor")}</button></span>
+          </div>`).join("") : `<p class="muted small" style="margin:12px 0 0">${T("recent_none")}</p>`}
       </div>
     </div>`;
 }
@@ -1126,11 +2026,11 @@ function bindRecent(root) {
         const whole = b.dataset.to === "cor" ? row.dataset.raw : row.querySelector("[data-text]").textContent.trim();
         const text = b.dataset.picked || whole;
         const input = $(b.dataset.to === "hw" ? "hw-new" : "cor-alias");
-        if (!input || input.disabled) { toast("当前语音识别不支持热词", true); return; }
+        if (!input || input.disabled) { toast(T("hw_unsupported"), true); return; }
         input.value = text;
         input.scrollIntoView({ behavior: "smooth", block: "center" });
         input.focus();
-        toast(b.dataset.to === "hw" ? "改成要加的词，再点“添加”" : "改成认错的那部分，填上正确写法，再点“添加”");
+        toast(b.dataset.to === "hw" ? T("fill_hw_toast") : T("fill_cor_toast"));
       };
     });
   });
@@ -1140,18 +2040,19 @@ function vadCard(v) {
   const [low, high] = v.range;
   return `
     <div class="card" style="margin-top:16px">
-      <div class="card-head"><h2>说完停顿多久算一句</h2><span class="pill ok">${esc(v.selected)} · ${v.silence_ms}ms</span></div>
-      ${v.asr_stream ? `<div class="banner warn">当前是流式识别，由识别服务自己断句，这里的设置不起作用。</div>` : ""}
-      ${v.asr_doubao ? `<div class="banner info">豆包由识别服务断句，也按这个时长判断一句话说完。</div>` : ""}
+      <div class="card-head"><h2>${T("vad_title")}</h2><span class="pill ok">${esc(v.selected)} · ${v.silence_ms}ms</span></div>
+      ${v.asr_stream ? `<div class="banner warn">${T("vad_stream")}</div>` : ""}
+      ${v.asr_doubao ? `<div class="banner info">${T("vad_doubao")}</div>` : ""}
       <div class="panel ${v.supported ? "" : "disabled-area"}">
-        <p style="margin:0 0 14px">说话中间停顿超过这个时长，就当这句话说完了，发给大模型。经常话没说完就被打断，就调大一些；调大后每句话说完要多等这么久才回复。</p>
-        <label class="f">停顿时长（毫秒）<span class="hint">${low}～${high}，一般 800～1200 比较合适</span>
+        <p style="margin:0 0 14px">${T("vad_intro")}</p>
+        <label class="f">${T("vad_lbl")}<span class="hint">${T("vad_hint", low, high)}</span>
           <input class="in" id="vad-silence" value="${esc(v.silence_ms)}" inputmode="numeric" ${v.supported ? "" : "disabled"}></label>
-        <div class="actions"><span class="result muted">${v.supported ? "保存后马上生效，在线设备不用重新连接。本地识别和豆包都按这个时长判断。" : "后台只支持设置 SileroVAD 的停顿时长。"}</span>
-          <button class="btn primary" id="vad-save" ${v.supported ? "" : "disabled"}>保存</button></div>
+        <div class="actions"><span class="result muted">${v.supported ? T("vad_result_ok") : T("vad_result_unsupported")}</span>
+          <button class="btn primary" id="vad-save" ${v.supported ? "" : "disabled"}>${T("save")}</button></div>
       </div>
     </div>`;
 }
+
 
 // ---------- 语音合成 ----------
 
@@ -1164,16 +2065,16 @@ async function renderTTS(root) {
   d.voices.forEach((v) => { let g = groups.find((x) => x.name === v.group); if (!g) groups.push(g = { name: v.group, items: [] }); g.items.push(v); });
   const cur = d.voices.find((v) => v.value === d.voice);
   root.innerHTML = `
-    <div class="page-head"><div><h1>语音合成</h1><p class="sub">把回复转成语音。EdgeTTS 免费、不需要 Key，换音色不用下载任何文件。</p></div>
-      <span class="pill ok">当前：${esc(d.selected)}${cur ? ` · ${esc(cur.name)}` : ""}</span></div>
-    ${isEdge ? "" : `<div class="banner warn">当前使用的是 ${esc(d.selected)}，后台只支持设置 EdgeTTS 的音色。</div>`}
+    <div class="page-head"><div><h1>${T("nav_tts")}</h1><p class="sub">${T("tts_sub")}</p></div>
+      <span class="pill ok">${T("current_label", esc(d.selected))}${cur ? ` · ${esc(cur.name)}` : ""}</span></div>
+    ${isEdge ? "" : `<div class="banner warn">${T("tts_only_edge", esc(d.selected))}</div>`}
     <div class="card panel ${isEdge ? "" : "disabled-area"}">
       ${groups.map((g) => `<div class="voice-group"><h3>${esc(g.name)}</h3><div class="voices">${g.items.map((v) => `
         <div class="voice ${v.value === chosen ? "on" : ""}" data-voice="${esc(v.value)}" role="button" tabindex="0">
           <div class="meta"><b>${esc(v.name)}</b> <span class="muted small">${esc(v.gender)}</span><small>${esc(v.style)}</small></div>
-          <button class="play" data-play="${esc(v.value)}" title="试听">▶</button></div>`).join("")}</div></div>`).join("")}
-      <div class="actions"><span class="result muted">保存后，设备重新连接时生效。</span>
-        <button class="btn primary" id="tts-save">保存音色</button></div>
+          <button class="play" data-play="${esc(v.value)}" title="${T("preview")}">▶</button></div>`).join("")}</div></div>`).join("")}
+      <div class="actions"><span class="result muted">${T("tts_save_note")}</span>
+        <button class="btn primary" id="tts-save">${T("tts_save")}</button></div>
     </div>`;
   const pick = (el) => { chosen = el.dataset.voice; root.querySelectorAll(".voice").forEach((x) => x.classList.toggle("on", x === el)); };
   root.querySelectorAll(".voice").forEach((el) => {
@@ -1190,12 +2091,12 @@ async function renderTTS(root) {
     const a = audio = new Audio("/admin/api/tts/preview?voice=" + encodeURIComponent(b.dataset.play));
     a.onplaying = () => { if (audio === a) b.textContent = "■"; };
     a.onended = resetPlay;
-    a.onerror = () => { resetPlay(); toast("试听失败，请检查电脑能否访问微软的语音服务", true); };
+    a.onerror = () => { resetPlay(); toast(T("preview_fail"), true); };
     a.play().catch(() => {});
   }));
   page.dirty = () => chosen !== d.voice;
   $("tts-save").onclick = (e) => busy(e.target, async () => {
-    try { const r = await api("tts", { voice: chosen }); toast(r.changed.length ? r.note : "没有修改", r.failed); page.dirty = null; await openPage("tts", true); }
+    try { const r = await api("tts", { voice: chosen }); toast(r.changed.length ? r.note : T("nochange"), r.failed); page.dirty = null; await openPage("tts", true); }
     catch (err) { toast(err.message, true); }
   });
 }
@@ -1205,28 +2106,29 @@ async function renderTTS(root) {
 async function renderIntent(root) {
   const d = await api("intent");
   let mode = d.mode === "other" ? "nointent" : d.mode;
+  const INTENT_LABEL = intentLabels();
   root.innerHTML = `
-    <div class="page-head"><div><h1>意图识别</h1><p class="sub">决定大模型能不能调用插件（查天气、听新闻、放音乐等）。</p></div>
-      <span class="pill ok">当前：${esc(INTENT_LABEL[d.mode] || d.selected)}</span></div>
-    ${d.locked ? '<div class="banner info">正在使用 Claude Code，只能选“不用插件”。Claude Code 有自己的工具（读文件、搜索等），不走这里的插件。切换到 API 模型后，这里会自动恢复上次的选择。</div>' : ""}
-    ${d.mode === "other" ? `<div class="banner warn">当前的 ${esc(d.selected)} 后台不再支持，请在下面选一种并保存。</div>` : ""}
+    <div class="page-head"><div><h1>${T("nav_intent")}</h1><p class="sub">${T("intent_sub")}</p></div>
+      <span class="pill ok">${T("current_label", esc(INTENT_LABEL[d.mode] || d.selected))}</span></div>
+    ${d.locked ? `<div class="banner info">${T("intent_locked")}</div>` : ""}
+    ${d.mode === "other" ? `<div class="banner warn">${T("intent_other", esc(d.selected))}</div>` : ""}
     <div class="choices">
       <button class="choice" data-mode="nointent"><div class="mark" style="background:var(--soft)">💬</div>
-        <div><b>不用插件</b><small>每句话直接交给大模型，只能聊天，查不了实时信息</small></div></button>
+        <div><b>${T("intent_none")}</b><small>${T("intent_none_desc")}</small></div></button>
       <button class="choice" data-mode="function_call"><div class="mark" style="background:var(--accent-soft)">🧩</div>
-        <div><b>用插件</b><small>大模型需要时自己调用插件，例如问天气时先查天气再回答。需要模型支持工具调用</small></div></button>
+        <div><b>${T("intent_on")}</b><small>${T("intent_on_desc")}</small></div></button>
     </div>
-    <div class="section-title">插件<span class="muted small" style="font-weight:400">选“用插件”时生效</span></div>
+    <div class="section-title">${T("plugins_title")}<span class="muted small" style="font-weight:400">${T("plugins_hint")}</span></div>
     <div class="card panel" id="plugins-box">
       <div class="plugins">
         ${d.plugins.map((p) => `<label class="plugin ${p.enabled ? "on" : ""}"><input type="checkbox" data-fn="${esc(p.name)}" ${p.enabled ? "checked" : ""}>
-          <div><b>${esc(p.label)}</b>${p.needs_config ? ' <span class="pill warn">还没配置</span>' : ""}<small>${esc(p.desc)}</small></div></label>`).join("")}
+          <div><b>${esc(p.label)}</b>${p.needs_config ? ` <span class="pill warn">${T("not_setup")}</span>` : ""}<small>${esc(p.desc)}</small></div></label>`).join("")}
         ${d.always_on.map((p) => `<div class="plugin fixed"><input type="checkbox" checked disabled>
-          <div><b>${esc(p.label)}</b> <span class="pill">始终开启</span><small>${esc(p.desc)}</small></div></div>`).join("")}
+          <div><b>${esc(p.label)}</b> <span class="pill">${T("always_on")}</span><small>${esc(p.desc)}</small></div></div>`).join("")}
       </div>
-      ${d.extra.length ? `<p class="muted small" style="margin:12px 0 0">另外保留了配置文件里手动添加的：${esc(d.extra.join("、"))}</p>` : ""}
+      ${d.extra.length ? `<p class="muted small" style="margin:12px 0 0">${T("intent_extra", esc(d.extra.join(LSEP())))}</p>` : ""}
     </div>
-    <div class="actions"><button class="btn primary" id="intent-save">保存</button></div>`;
+    <div class="actions"><button class="btn primary" id="intent-save">${T("save")}</button></div>`;
   const values = () => ({ mode, functions: [...root.querySelectorAll("[data-fn]:checked")].map((i) => i.dataset.fn) });
   const sync = () => {
     root.querySelectorAll("[data-mode]").forEach((b) => {
@@ -1237,7 +2139,7 @@ async function renderIntent(root) {
     root.querySelectorAll("[data-fn]").forEach((i) => i.closest(".plugin").classList.toggle("on", i.checked));
   };
   root.querySelectorAll("[data-mode]").forEach((b) => (b.onclick = () => {
-    if (d.locked && b.dataset.mode !== "nointent") return toast("使用 Claude Code 时只能选“不用插件”", true);
+    if (d.locked && b.dataset.mode !== "nointent") return toast(T("intent_locked_toast"), true);
     mode = b.dataset.mode; sync();
   }));
   root.querySelectorAll("[data-fn]").forEach((i) => (i.onchange = sync));
@@ -1248,6 +2150,7 @@ async function renderIntent(root) {
     catch (err) { toast(err.message, true); }
   });
 }
+
 
 // ---------- Grok Bot ----------
 
@@ -1262,31 +2165,31 @@ async function renderGrokBot(root) {
   // 还没从云端读过列表时，先列出已勾选的
   const list = bots || entries.map((e) => ({ id: e.bot_id, name: e.bot_name, preview: "", busy: false }));
   root.innerHTML = `
-    <div class="page-head"><div><h1>Grok Bot</h1><p class="sub">xAI 的云端 AI 同事。用 Cursor 账号登录后勾选 Bot，它的名字会自动成为称呼，对设备说“嗨 孙悟空，帮我……”就能派活，它的回复会念出来；长任务做完后在 Grok Bot App 里也能看到。</p></div>
-      <span class="pill ${acc.logged_in ? "ok" : "warn"}">${acc.logged_in ? "已登录" : acc.needs_login ? "登录已失效" : "未登录"}</span></div>
-    <div class="banner warn">走的是 Grok Bot 桌面 App 用的内部接口，不是官方公开的 API：App 升级后可能失效，使用频率请和手动聊天相当。凭证只保存在本机，不会显示在页面上。</div>
-    <div class="section-title">账号</div>
+    <div class="page-head"><div><h1>Grok Bot</h1><p class="sub">${T("gb_sub")}</p></div>
+      <span class="pill ${acc.logged_in ? "ok" : "warn"}">${acc.logged_in ? T("gb_logged_in") : acc.needs_login ? T("gb_expired") : T("gb_not_logged_in")}</span></div>
+    <div class="banner warn">${T("gb_internal")}</div>
+    <div class="section-title">${T("gb_account")}</div>
     <div class="card panel">
-      ${login.pending ? `<div class="banner info">正在等待你在浏览器里批准登录。页面没有自动打开的话，复制下面的地址在浏览器里打开，登录 Cursor 账号后点“批准”（不是“打开 Grok Bot”）。</div>
-        <div class="kv"><div class="k">登录地址</div><code style="word-break:break-all">${esc(login.url)}</code><button class="btn sm copy" data-copy="${esc(login.url)}">复制</button></div>
-        <div class="actions"><a class="btn" href="${esc(login.url)}" target="_blank" rel="noopener">打开登录页</a><button class="btn" id="gb-cancel">取消</button></div>`
+      ${login.pending ? `<div class="banner info">${T("gb_pending")}</div>
+        <div class="kv"><div class="k">${T("gb_login_url")}</div><code style="word-break:break-all">${esc(login.url)}</code><button class="btn sm copy" data-copy="${esc(login.url)}">${T("copy")}</button></div>
+        <div class="actions"><a class="btn" href="${esc(login.url)}" target="_blank" rel="noopener">${T("gb_open_login")}</a><button class="btn" id="gb-cancel">${T("cancel")}</button></div>`
       : `${login.result && !login.result.ok ? `<div class="banner err">${esc(login.result.note)}</div>` : ""}
-        ${acc.logged_in ? `<p style="margin:0 0 12px">${days >= 0 ? `已登录，登录有效期还有 ${days} 天（到 ${esc(fmt(acc.expires_at))}）。快到期时会自动续期` : "已登录，下次使用时会自动续期"}；续期失败这里会提示重新登录。</p>`
-          : acc.needs_login ? '<p style="margin:0 0 12px">登录已失效（服务端要求重新登录），请重新登录。</p>'
-          : '<p style="margin:0 0 12px">还没登录。点“登录”会给出一个 Cursor 的登录地址，在浏览器里批准即可，不需要在这里输入密码。</p>'}
-        <div class="actions" style="justify-content:flex-start"><button class="btn primary" id="gb-login">${acc.logged_in ? "重新登录" : "登录"}</button>
-          ${acc.logged_in || acc.needs_login ? '<button class="btn" id="gb-logout">退出登录</button>' : ""}</div>`}
+        ${acc.logged_in ? `<p style="margin:0 0 12px">${days >= 0 ? T("gb_days_left", days, esc(fmt(acc.expires_at))) : T("gb_renew_next")}${T("gb_renew_tail")}</p>`
+          : acc.needs_login ? `<p style="margin:0 0 12px">${T("gb_login_invalid")}</p>`
+          : `<p style="margin:0 0 12px">${T("gb_not_logged_yet")}</p>`}
+        <div class="actions" style="justify-content:flex-start"><button class="btn primary" id="gb-login">${acc.logged_in ? T("gb_relogin") : T("gb_login")}</button>
+          ${acc.logged_in || acc.needs_login ? `<button class="btn" id="gb-logout">${T("logout")}</button>` : ""}</div>`}
     </div>
     <div class="section-title">Bot</div>
     <div class="card panel">
-      ${!acc.logged_in ? '<p class="muted" style="margin:0">登录后再读取 Bot 列表。</p>' : `
-      ${d.bots_error ? `<div class="banner err">读取 Bot 列表失败：${esc(d.bots_error)}</div>` : ""}
-      <p class="muted small" style="margin:0 0 4px">${bots ? `列表读取于 ${esc(fmt(d.bots_at))}。` : "还没从云端读取 Bot 列表（会唤醒休眠的云端电脑，要几秒）。"}勾选保存后自动用 Bot 的名字做称呼；想改写法、或按你的发音录入，到<a href="#calls">呼名</a>页。名字含空格标点、或已被别的模型占用时不会自动配，要到呼名页手动加。</p>
+      ${!acc.logged_in ? `<p class="muted" style="margin:0">${T("gb_login_first")}</p>` : `
+      ${d.bots_error ? `<div class="banner err">${T("gb_bots_failed", esc(d.bots_error))}</div>` : ""}
+      <p class="muted small" style="margin:0 0 4px">${bots ? T("gb_read_at", esc(fmt(d.bots_at))) : T("gb_not_read")}${T("gb_alias_a")}<a href="#calls">${T("nav_calls")}</a>${T("gb_alias_b")}</p>
       ${list.length ? list.map((b) => `<label class="switch" style="margin-top:8px"><input type="checkbox" data-bot="${esc(b.id)}" data-name="${esc(b.name)}" ${checked.has(b.id) ? "checked" : ""}>
-          <span>${esc(b.name)}${b.busy ? ' <span class="pill">忙</span>' : ""}${checked.has(b.id) ? (aliasesOf(b.id).length ? ` <span class="pill ok">称呼：${esc(aliasesOf(b.id).join("、"))}</span>` : ' <span class="pill warn">还没配称呼</span>') : ""}</span>
-          <small>${esc(b.preview || "")}</small></label>`).join("") : '<p class="muted" style="margin:8px 0 0">没有 Bot。先在 Grok Bot App 里创建，再点“重新读取”。</p>'}
-      <div class="actions"><span class="result muted">保存后马上生效，不用重启服务。</span>
-        <button class="btn" id="gb-refresh">${bots ? "重新读取" : "读取 Bot 列表"}</button><button class="btn primary" id="gb-save">保存</button></div>`}
+          <span>${esc(b.name)}${b.busy ? ` <span class="pill">${T("gb_busy")}</span>` : ""}${checked.has(b.id) ? (aliasesOf(b.id).length ? ` <span class="pill ok">${T("names_label", esc(aliasesOf(b.id).join(LSEP())))}</span>` : ` <span class="pill warn">${T("gb_no_name")}</span>`) : ""}</span>
+          <small>${esc(b.preview || "")}</small></label>`).join("") : `<p class="muted" style="margin:8px 0 0">${T("gb_no_bots")}</p>`}
+      <div class="actions"><span class="result muted">${T("gb_save_now")}</span>
+        <button class="btn" id="gb-refresh">${bots ? T("gb_reload") : T("gb_read_list")}</button><button class="btn primary" id="gb-save">${T("save")}</button></div>`}
     </div>`;
   root.querySelectorAll("[data-copy]").forEach((b) => (b.onclick = () => copyText(b.dataset.copy)));
   if ($("gb-login")) $("gb-login").onclick = (e) => busy(e.target, async () => {
@@ -1295,7 +2198,7 @@ async function renderGrokBot(root) {
   });
   if ($("gb-cancel")) $("gb-cancel").onclick = async () => { await api("grokbot/login/cancel", {}); await openPage("grokbot", true); };
   if ($("gb-logout")) $("gb-logout").onclick = async () => {
-    if (!confirm("退出登录会删除本机保存的凭证，之后设备叫不到 Grok Bot（正在进行的对话会做完）。确定吗？")) return;
+    if (!confirm(T("gb_logout_confirm"))) return;
     await api("grokbot/logout", {}); await openPage("grokbot", true);
   };
   if ($("gb-refresh")) $("gb-refresh").onclick = (e) => busy(e.target, async () => {
@@ -1303,7 +2206,7 @@ async function renderGrokBot(root) {
   });
   if ($("gb-save")) $("gb-save").onclick = (e) => busy(e.target, async () => {
     const picked = [...root.querySelectorAll("[data-bot]:checked")].map((c) => ({ id: c.dataset.bot, name: c.dataset.name }));
-    try { const r = await api("grokbot/bots", { bots: picked }); toast(r.changed.length ? r.note : "没有修改"); await openPage("grokbot", true); }
+    try { const r = await api("grokbot/bots", { bots: picked }); toast(r.changed.length ? r.note : T("nochange")); await openPage("grokbot", true); }
     catch (err) { toast(err.message, true); }
   });
   if (login.pending) {
@@ -1316,55 +2219,54 @@ async function renderGrokBot(root) {
   }
 }
 
+
 // ---------- 呼名 ----------
 
 // ---------- 记忆：聊天记录里被截掉的旧对话总结成的"关于用户"的要点，每台设备一份，所有 API 模型共用 ----------
 async function renderMemory(root) {
   const d = await api("memory");
   const st = d.settings;
-  const SOURCE = { summary: "自动总结", manual: "后台修改", cleared: "已清空" };
-  const fmt = (t) => (t ? new Date(t * 1000).toLocaleString("zh-CN", { hour12: false }) : "");
+  const SOURCE = () => ({ summary: T("mem_src_summary"), manual: T("mem_src_manual"), cleared: T("mem_src_cleared") });
+  const fmt = (t) => (t ? new Date(t * 1000).toLocaleString(LOCALE(), { hour12: false }) : "");
   const edits = {};  // device -> 编辑框里的内容（改过才有）
   page.dirty = () => d.devices.some((x) => edits[x.device] !== undefined && edits[x.device] !== x.memory.summary);
-  const status = !st.enabled ? '<span class="pill">聊天记录未开启</span>'
-    : st.summary ? '<span class="pill ok">自动总结已开启</span>' : '<span class="pill">自动总结已关闭</span>';
+  const status = !st.enabled ? `<span class="pill">${T("mem_chat_off")}</span>`
+    : st.summary ? `<span class="pill ok">${T("mem_sum_on")}</span>` : `<span class="pill">${T("mem_sum_off")}</span>`;
   root.innerHTML = `
-    <div class="page-head"><div><h1>记忆</h1><p class="sub">聊天记录按设备和模型存在本机（data/chat.db），每次只把最近 ${st.max_messages} 条（约 ${st.max_tokens} token 以内）发给模型；
-      更早的部分自动总结成这里的记忆，放进系统提示。同一台设备的所有 API 模型共用一份记忆，Claude Code 和 Grok Bot 不用它（它们的上下文在自己的会话里）。
-      在这里修改或清空后，下一次提问就按新的来。</p></div>${status}</div>
+    <div class="page-head"><div><h1>${T("nav_memory")}</h1><p class="sub">${T("mem_sub", st.max_messages, st.max_tokens)}</p></div>${status}</div>
     <div id="mem-list"></div>`;
   const list = $("mem-list");
   const draw = () => {
-    if (!d.devices.length) { list.innerHTML = '<div class="card panel muted">还没有聊天记录。设备聊过几轮、旧对话被截掉后，这里会出现总结出来的记忆。</div>'; return; }
+    if (!d.devices.length) { list.innerHTML = `<div class="card panel muted">${T("mem_none")}</div>`; return; }
     list.innerHTML = d.devices.map((x) => {
       const m = x.memory, value = edits[x.device] ?? m.summary;
-      const models = x.models.map((o) => `${esc(o.label)} ${o.count} 条${o.agent ? "（不总结）" : ""}`).join("、") || "没有聊天记录";
+      const models = x.models.map((o) => `${esc(o.label)} ${T("n_msgs", o.count)}${o.agent ? T("mem_no_sum") : ""}`).join(LSEP()) || T("mem_nochat");
       return `<div class="card panel" data-device="${esc(x.device)}">
         <div class="device-top"><span class="dot ${x.online ? "on" : ""}"></span><b class="mono">${esc(x.device)}</b>
-          ${m.updated ? `<span class="pill">${esc(SOURCE[m.source] || "")} · ${esc(fmt(m.updated))}</span>` : '<span class="pill">还没有记忆</span>'}</div>
-        <p class="muted small" style="margin:8px 0 0">存着的记录：${models}</p>
-        <label class="f" style="margin-top:14px">记忆全文<span class="hint">要点式，每条一行；自动总结时会在这份基础上合并新的内容（约 ${st.summary_chars} 字以内）</span>
-          <textarea class="in" rows="8" data-edit maxlength="5000" placeholder="（空）">${esc(value)}</textarea></label>
-        <div class="actions"><span class="result muted small">${value.length} 字</span>
-          <button class="btn" data-clear ${m.summary || value ? "" : "disabled"}>清空</button>
-          <button class="btn primary" data-save>保存</button></div></div>`;
+          ${m.updated ? `<span class="pill">${esc(SOURCE()[m.source] || "")} · ${esc(fmt(m.updated))}</span>` : `<span class="pill">${T("mem_empty")}</span>`}</div>
+        <p class="muted small" style="margin:8px 0 0">${T("mem_stored", models)}</p>
+        <label class="f" style="margin-top:14px">${T("mem_full")}<span class="hint">${T("mem_full_hint", st.summary_chars)}</span>
+          <textarea class="in" rows="8" data-edit maxlength="5000" placeholder="${T("empty_paren")}">${esc(value)}</textarea></label>
+        <div class="actions"><span class="result muted small">${T("n_chars", value.length)}</span>
+          <button class="btn" data-clear ${m.summary || value ? "" : "disabled"}>${T("clear")}</button>
+          <button class="btn primary" data-save>${T("save")}</button></div></div>`;
     }).join("");
     list.querySelectorAll("[data-device]").forEach((card) => {
       const dev = card.dataset.device, x = d.devices.find((y) => y.device === dev);
       const ta = card.querySelector("[data-edit]");
-      ta.oninput = () => { edits[dev] = ta.value; card.querySelector(".result").textContent = `${ta.value.length} 字`; };
+      ta.oninput = () => { edits[dev] = ta.value; card.querySelector(".result").textContent = T("n_chars", ta.value.length); };
       const save = (btn, text) => busy(btn, async () => {
         const res = await fetch("/admin/api/memory/save", { method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ device: dev, summary: text, version: x.memory.version }) });
         const r = await res.json().catch(() => ({}));
-        if (res.status === 401) return toast(EXPIRED + "。请先复制改好的内容，再刷新页面重新登录", true);
+        if (res.status === 401) return toast(T("expired_copy"), true);
         if (res.status === 409) { x.memory = r.memory; toast(r.error, true); draw(); return; }
-        if (!res.ok || r.ok === false) return toast(r.error || "保存失败", true);
+        if (!res.ok || r.ok === false) return toast(r.error || T("save_failed"), true);
         x.memory = r.memory; delete edits[dev];
-        toast(text ? "已保存，下一次提问就用新的记忆" : "记忆已清空"); draw();
+        toast(text ? T("mem_saved") : T("mem_cleared")); draw();
       });
       card.querySelector("[data-save]").onclick = (e) => save(e.currentTarget, ta.value);
-      card.querySelector("[data-clear]").onclick = (e) => { if (confirm(`清空 ${dev} 的记忆？聊天记录不受影响。`)) save(e.currentTarget, ""); };
+      card.querySelector("[data-clear]").onclick = (e) => { if (confirm(T("mem_clear_confirm", dev))) save(e.currentTarget, ""); };
     });
   };
   draw();
@@ -1377,19 +2279,18 @@ async function renderCallNames(root) {
   const labelOf = (entry) => (d.targets.find((t) => t.entry === entry) || models.find((m) => m.entry === entry) || { label: entry }).label;
   setOnline(devices);
   root.innerHTML = `
-    <div class="page-head"><div><h1>呼名</h1><p class="sub">唤醒设备后，句子开头说“嗨 + 称呼”，就换成对应的模型回答；之后直接说话也交给它，直到叫别的称呼。每个模型只记得跟自己的对话。
-      只说称呼时只切换模型、回一声“${esc(d.reply)}”，不启动 Claude；说出第一句话时才启动，并判断要不要接上次的对话。完整经过见<a href="#how">工作原理</a>。</p></div>
-      <span class="pill ${d.enabled ? "ok" : ""}">${d.enabled ? "已开启" : "已关闭"}</span></div>
+    <div class="page-head"><div><h1>${T("nav_calls")}</h1><p class="sub">${T("cn_sub_a", esc(d.reply))}<a href="#how">${T("nav_how")}</a>${T("cn_sub_b")}</p></div>
+      <span class="pill ${d.enabled ? "ok" : ""}">${d.enabled ? T("cn_on") : T("cn_off")}</span></div>
     <div class="card panel">
-      <label class="switch" style="margin-top:0"><input type="checkbox" id="cn-enabled" ${d.enabled ? "checked" : ""}><span>开启呼名</span>
-        <small>关闭后，“嗨 + 称呼”会当作普通的话交给当前模型</small></label>
-      <label class="f" style="margin-top:16px">只说称呼时的回复<span class="hint">只说“嗨 + 称呼”时，服务端切换模型后直接回这句，不启动模型。越短越快，中间的标点会去掉、一次播完</span>
+      <label class="switch" style="margin-top:0"><input type="checkbox" id="cn-enabled" ${d.enabled ? "checked" : ""}><span>${T("cn_enable")}</span>
+        <small>${T("cn_enable_hint")}</small></label>
+      <label class="f" style="margin-top:16px">${T("cn_reply_lbl")}<span class="hint">${T("cn_reply_hint")}</span>
         <input class="in" id="cn-reply" value="${esc(d.reply)}" maxlength="40"></label>
-      <p class="muted small" style="margin:12px 0 0">语音识别常把称呼听成别的写法（比如 Claude 会听成 cloud），每种写法都要列出来。开头的“${esc(d.prefixes.join(" / "))}”不用写。设备第一次连上时用后台默认的模型（${esc(labelOf(d.default) || d.default || "未设置")}），之后记住每台设备上次叫的模型。</p>
+      <p class="muted small" style="margin:12px 0 0">${T("cn_note_a", esc(d.prefixes.join(" / ")))}${T("cn_note_b", esc(labelOf(d.default) || d.default || T("cn_unset")))}</p>
     </div>
     <div id="cn-models"></div>
     <div class="card panel" id="cn-add-box" style="margin-top:16px"></div>
-    <div class="actions"><span class="result muted">保存后马上生效，不用重启服务。</span><button class="btn primary" id="cn-save">保存</button></div>`;
+    <div class="actions"><span class="result muted">${T("gb_save_now")}</span><button class="btn primary" id="cn-save">${T("save")}</button></div>`;
 
   const allAliases = () => models.flatMap((m) => m.aliases);
   const findModel = (entry) => models.find((m) => m.entry === entry);
@@ -1397,7 +2298,7 @@ async function renderCallNames(root) {
     a = String(a || "").trim().toLowerCase();
     if (!a) return;
     const owner = models.find((x) => x.aliases.includes(a));
-    if (owner && owner !== m) { toast(`“${a}”已经是 ${owner.label} 的称呼`, true); return; }
+    if (owner && owner !== m) { toast(T("alias_taken", a, owner.label), true); return; }
     if (!m.aliases.includes(a)) m.aliases.push(a);
   };
 
@@ -1407,28 +2308,27 @@ async function renderCallNames(root) {
     const say = esc(m.aliases[0] || m.label);
     let html = "";
     if (mine && learning.active) {
-      html = `<div class="banner info" style="margin:12px 0">正在录入：先唤醒设备，再说“嗨 ${say}”，每说一遍等设备回答“收到”再说下一遍。
-        已录 ${samples.length}/${learning.count} 遍，还剩 ${learning.seconds_left} 秒。</div>
-        <button class="btn sm" data-stop>停止录入</button>`;
+      html = `<div class="banner info" style="margin:12px 0">${T("cn_learning", say, samples.length, learning.count, learning.seconds_left)}</div>
+        <button class="btn sm" data-stop>${T("cn_stop")}</button>`;
     } else if (learning.active) {
-      html = '<p class="muted small" style="margin:12px 0 0">正在给别的模型录入，录完再来。</p>';
+      html = `<p class="muted small" style="margin:12px 0 0">${T("cn_learning_other")}</p>`;
     } else if (!devices.length) {
-      html = '<p class="muted small" style="margin:12px 0 0">用设备录入：没有设备在线。先唤醒设备，再刷新本页。</p>';
+      html = `<p class="muted small" style="margin:12px 0 0">${T("cn_no_device_learn")}</p>`;
     } else {
       html = `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
-          ${devices.length > 1 ? `<select class="in" data-device style="max-width:280px">${devices.map((x) => `<option value="${esc(x.session_id)}">${esc(x.device_id || x.session_id)}（${esc(x.ip || "")}）</option>`).join("")}</select>` : ""}
-          <button class="btn sm" data-learn>用设备录入</button>
-          <span class="muted small">对着设备说 3 遍“嗨 + 称呼”，按你的发音记下语音识别听到的写法；录入期间的话不会交给模型</span></div>`;
+          ${devices.length > 1 ? `<select class="in" data-device style="max-width:280px">${devices.map((x) => `<option value="${esc(x.session_id)}">${T("cn_option_label", esc(x.device_id || x.session_id), esc(x.ip || ""))}</option>`).join("")}</select>` : ""}
+          <button class="btn sm" data-learn>${T("cn_learn_btn")}</button>
+          <span class="muted small">${T("cn_learn_hint")}</span></div>`;
     }
     if (samples.length) {
-      html += `<div class="section-title" style="margin-top:16px">录到的结果</div>
+      html += `<div class="section-title" style="margin-top:16px">${T("cn_results")}</div>
         ${samples.map((x, i) => {
           const ok = x.alias && x.alias.length >= 2;
           const dup = allAliases().includes(x.alias);
           return `<label class="switch" style="margin-top:6px"><input type="checkbox" data-sample="${i}" ${ok && !dup ? "checked" : ""} ${ok ? "" : "disabled"}>
-            <span>第 ${i + 1} 遍：识别为“${esc(x.text)}”→ 称呼 <b>${esc(x.alias || "（没听出称呼）")}</b></span>${dup ? "<small>已在列表里</small>" : ""}</label>`;
+            <span>${T("cn_sample", i + 1, esc(x.text), esc(x.alias || T("cn_no_heard")))}</span>${dup ? `<small>${T("cn_dup")}</small>` : ""}</label>`;
         }).join("")}
-        <div class="actions" style="justify-content:flex-start"><button class="btn sm" data-take>把勾选的加入称呼</button></div>`;
+        <div class="actions" style="justify-content:flex-start"><button class="btn sm" data-take>${T("cn_take")}</button></div>`;
     }
     return html;
   };
@@ -1437,19 +2337,19 @@ async function renderCallNames(root) {
     $("cn-models").innerHTML = models.map((m, mi) => `
       <div class="card" data-model="${mi}" style="margin-top:16px">
         <div class="card-head"><h2>${esc(m.label)}</h2><span>
-          ${m.entry === d.default ? '<span class="pill">默认模型</span>' : ""}
-          ${m.ready ? "" : '<span class="pill err">还没配置好</span>'}</span></div>
+          ${m.entry === d.default ? `<span class="pill">${T("default_model")}</span>` : ""}
+          ${m.ready ? "" : `<span class="pill err">${T("cn_not_ready")}</span>`}</span></div>
         <div class="panel" style="padding-top:12px">
           <div class="chips">${m.aliases.length ? m.aliases.map((a, i) => `<span class="chip on">${esc(a)}
-            <button class="chip-x" data-del="${i}" title="删除" aria-label="删除 ${esc(a)}">×</button></span>`).join("")
-            : '<span class="muted small">还没有称呼</span>'}</div>
+            <button class="chip-x" data-del="${i}" title="${T("del")}" aria-label="${T("del_named", esc(a))}">×</button></span>`).join("")
+            : `<span class="muted small">${T("cn_no_names")}</span>`}</div>
           <div style="display:flex;gap:8px;margin-top:12px;max-width:440px">
-            <input class="in" data-new placeholder="手动添加一种写法"><button class="btn sm" data-add>添加</button></div>
+            <input class="in" data-new placeholder="${T("cn_add_ph")}"><button class="btn sm" data-add>${T("add")}</button></div>
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-            <button class="btn sm" data-remove>不再呼叫这个模型</button></div>
+            <button class="btn sm" data-remove>${T("cn_remove_model")}</button></div>
           <div data-learnbox>${learnHtml(m)}</div>
         </div>
-      </div>`).join("") || '<div class="card panel" style="margin-top:16px"><p class="muted" style="margin:0">还没有给任何模型配称呼。</p></div>';
+      </div>`).join("") || `<div class="card panel" style="margin-top:16px"><p class="muted" style="margin:0">${T("cn_none")}</p></div>`;
 
     $("cn-models").querySelectorAll("[data-model]").forEach((card) => {
       const m = models[+card.dataset.model];
@@ -1467,17 +2367,17 @@ async function renderCallNames(root) {
       if (q("[data-stop]")) q("[data-stop]").onclick = async () => { learning = (await api("call-names/learn/stop", {})).learning; draw(); };
       if (q("[data-take]")) q("[data-take]").onclick = () => {
         card.querySelectorAll("[data-sample]:checked").forEach((c) => addAlias(m, learning.samples[+c.dataset.sample].alias));
-        draw(); toast("已加入列表，记得点保存");
+        draw(); toast(T("cn_taken"));
       };
     });
 
     const left = d.targets.filter((t) => !findModel(t.entry));
     $("cn-add-box").innerHTML = left.length
-      ? `<div class="section-title" style="margin-top:0">再呼叫一个模型</div>
+      ? `<div class="section-title" style="margin-top:0">${T("cn_add_title")}</div>
          <div style="display:flex;gap:8px;max-width:440px"><select class="in" id="cn-pick">${left.map((t) => `<option value="${esc(t.entry)}">${esc(t.label)}</option>`).join("")}</select>
-         <button class="btn sm" id="cn-add-model">添加</button></div>
-         <p class="muted small" style="margin:8px 0 0">只能选已经配置好的模型。要加别的厂商，先到“大模型”页填好接口地址、模型和 API Key。</p>`
-      : `<p class="muted small" style="margin:0">已配置好的模型都加上了。要加别的厂商，先到“大模型”页填好接口地址、模型和 API Key。</p>`;
+         <button class="btn sm" id="cn-add-model">${T("add")}</button></div>
+         <p class="muted small" style="margin:8px 0 0">${T("cn_add_note")}</p>`
+      : `<p class="muted small" style="margin:0">${T("cn_add_all")}</p>`;
     if ($("cn-add-model")) $("cn-add-model").onclick = () => {
       const t = d.targets.find((x) => x.entry === $("cn-pick").value);
       const m = { entry: t.entry, label: t.label, aliases: [], ready: true };
@@ -1506,33 +2406,33 @@ async function renderCallNames(root) {
   });
 }
 
+
 // ---------- 更新网关 ----------
 
 const fmtTime = (v) => (v ? new Date(typeof v === "number" ? v * 1000 : v).toLocaleString() : "");
 // 版本只显示时间和短提交号，不显示提交说明（用户定）
-const commitLine = (c) => c && c.short ? `${esc(fmtTime(c.date))} <span class="muted small">（${esc(c.short)}）</span>` : '<span class="muted">未知</span>';
-const UPDATE_NOTE = "更新期间网关会重启，一般 1～2 分钟，在线设备会断开一下再自动连上，正在进行的对话会中断。";
+const commitLine = (c) => c && c.short ? `${esc(fmtTime(c.date))} <span class="muted small">${T("commit_short", esc(c.short))}</span>` : `<span class="muted">${T("unknown_val")}</span>`;
 
 async function renderUpdate(root) {
   const d = await api("update");
   if (d.update.state === "running") return renderUpdating(root, d.update);
   const src = d.source || {};
   root.innerHTML = `
-    <div class="page-head"><div><h1>更新网关</h1><p class="sub">和 GitHub 上的版本比较，有新版本时由你决定什么时候更新，不会自动更新。</p></div>
-      ${d.unsupported ? "" : '<button class="btn" id="up-check">检查更新</button>'}</div>
+    <div class="page-head"><div><h1>${T("nav_update")}</h1><p class="sub">${T("upd_sub")}</p></div>
+      ${d.unsupported ? "" : `<button class="btn" id="up-check">${T("upd_check")}</button>`}</div>
     ${d.unsupported ? `<div class="banner warn">${esc(d.unsupported)}</div>` : ""}
     <div class="card panel"><div class="kv two">
-      <div class="k">当前版本</div><div>${commitLine(d.current)}</div>
-      ${d.running && d.running.short ? `<div class="k">运行中</div><div>${commitLine(d.running)} <span class="pill warn">和当前版本不一样，重启服务后才换成当前版本</span></div>` : ""}
-      ${d.branch ? `<div class="k">分支</div><div><code>${esc(d.branch)}</code></div>` : ""}
-      ${src.url ? `<div class="k">更新来源</div><div><code>${esc(src.url)}</code> 的 <code>${esc(src.branch)}</code> 分支</div>` : ""}
+      <div class="k">${T("upd_cur")}</div><div>${commitLine(d.current)}</div>
+      ${d.running && d.running.short ? `<div class="k">${T("upd_running")}</div><div>${commitLine(d.running)} <span class="pill warn">${T("upd_run_diff")}</span></div>` : ""}
+      ${d.branch ? `<div class="k">${T("upd_branch")}</div><div><code>${esc(d.branch)}</code></div>` : ""}
+      ${src.url ? `<div class="k">${T("upd_src")}</div><div><code>${esc(src.url)}</code>${T("upd_src_mid", esc(src.branch))}</div>` : ""}
     </div></div>
     <div id="up-last"></div>
-    ${d.unsupported ? "" : '<div class="section-title">新版本</div><div class="card" id="up-box"></div>'}`;
+    ${d.unsupported ? "" : `<div class="section-title">${T("upd_new_title")}</div><div class="card" id="up-box"></div>`}`;
   renderLastUpdate(d.update);
   if (d.unsupported) return;
   const check = () => busy($("up-check"), async () => {
-    $("up-box").innerHTML = '<div class="panel muted">正在和 GitHub 比较…（网络不好时最多等 30 秒）</div>';
+    $("up-box").innerHTML = `<div class="panel muted">${T("upd_comparing")}</div>`;
     try { drawCheck(root, (await api("update/check", {})).check); }
     catch (e) { $("up-box").innerHTML = `<div class="panel"><div class="banner err" style="margin:0">${esc(e.message)}</div></div>`; }
   });
@@ -1549,14 +2449,14 @@ function renderLastUpdate(u) {
   let html = "";
   if (u.state === "done") {
     html = u.changed
-      ? `<div class="banner info">${esc(when)} 更新成功：${esc(u.from.short || "")} → ${esc(u.to.short || "")}。</div>`
-      : `<div class="banner info">${esc(when)} 检查过，已经是最新版本，没有改动。</div>`;
-    if (u.restart_needed) html += '<div class="banner warn">代码已更新，但服务是手动启动的，没有自动重启：请在运行网关的终端按 Ctrl+C 停止，再运行 scripts/start.sh。</div>';
+      ? `<div class="banner info">${T("upd_done_ok", esc(when), esc(u.from.short || ""), esc(u.to.short || ""))}</div>`
+      : `<div class="banner info">${T("upd_done_latest", esc(when))}</div>`;
+    if (u.restart_needed) html += `<div class="banner warn">${T("upd_restart")}</div>`;
   } else {
-    html = `<div class="banner ${u.state === "failed" ? "err" : "warn"}">${esc(when)} 更新没有完成：${esc(u.error || "")}${u.changed ? "" : "。网关仍是原来的版本"}</div>`;
+    html = `<div class="banner ${u.state === "failed" ? "err" : "warn"}">${T("upd_failed_a", esc(when), esc(u.error || ""))}${u.changed ? "" : T("upd_failed_b")}</div>`;
   }
   // 没成功时展开输出：原因（如"按上面的提示处理"）就在里面
-  if (u.log && u.log.length) html += `<details class="adv" style="margin:0 0 14px;padding:0;border:0" ${u.state === "done" ? "" : "open"}><summary>更新输出</summary><pre class="update-log">${esc(u.log.join("\n"))}</pre></details>`;
+  if (u.log && u.log.length) html += `<details class="adv" style="margin:0 0 14px;padding:0;border:0" ${u.state === "done" ? "" : "open"}><summary>${T("upd_output")}</summary><pre class="update-log">${esc(u.log.join("\n"))}</pre></details>`;
   box.style.marginTop = "14px";
   box.innerHTML = html;
 }
@@ -1564,17 +2464,17 @@ function renderLastUpdate(u) {
 function drawCheck(root, c) {
   const box = $("up-box");
   if (!box) return;
-  const when = c.checked_at ? `<span class="muted small">检查于 ${esc(fmtTime(c.checked_at))}</span>` : "";
+  const when = c.checked_at ? `<span class="muted small">${T("upd_checked_at", esc(fmtTime(c.checked_at)))}</span>` : "";
   if (c.state === "latest") {
-    box.innerHTML = `<div class="card-head"><h2><span class="pill ok">已经是最新版本</span></h2>${when}</div><div class="panel muted">远端最新：${commitLine(c.latest)}</div>`;
+    box.innerHTML = `<div class="card-head"><h2><span class="pill ok">${T("upd_latest")}</span></h2>${when}</div><div class="panel muted">${T("upd_remote_latest")}${commitLine(c.latest)}</div>`;
   } else if (c.state === "available" || c.state === "dirty") {
-    box.innerHTML = `<div class="card-head"><h2>有新版本</h2>${when}</div><div class="panel">最新版本：${commitLine(c.latest)}</div>
+    box.innerHTML = `<div class="card-head"><h2>${T("upd_avail")}</h2>${when}</div><div class="panel">${T("upd_latest_ver")}${commitLine(c.latest)}</div>
       <div class="panel" style="border-top:1px solid var(--line)">
         ${c.state === "dirty" ? `<div class="banner warn">${esc(c.message)}<br><code>${esc((c.files || []).join("  "))}</code></div>`
-          : `<p class="muted small" style="margin:0 0 4px">${UPDATE_NOTE}依赖有变化时会自动补装；补装失败或新版本起不来时自动退回现在的版本。</p>`}
-        <div class="actions" style="margin-top:10px"><button class="btn primary" id="up-start" ${c.state === "dirty" ? "disabled" : ""}>立即更新</button></div></div>`;
+          : `<p class="muted small" style="margin:0 0 4px">${T("update_note")}${T("upd_deps")}</p>`}
+        <div class="actions" style="margin-top:10px"><button class="btn primary" id="up-start" ${c.state === "dirty" ? "disabled" : ""}>${T("upd_now")}</button></div></div>`;
     if (c.state === "available") $("up-start").onclick = (e) => busy(e.target, async () => {
-      if (!confirm("现在更新网关吗？\n\n" + UPDATE_NOTE)) return;
+      if (!confirm(T("upd_confirm_a") + "\n\n" + T("update_note"))) return;
       try { renderUpdating(root, (await api("update/start", {})).update); }
       catch (err) { toast(err.message, true); }
     });
@@ -1587,18 +2487,18 @@ function drawCheck(root, c) {
 // 更新中：每 2 秒查一次进度。网关重启期间连不上是正常的，等它回来；结束后成功就刷新整页（页面本身也可能更新了）
 function renderUpdating(root, u) {
   root.innerHTML = `
-    <div class="page-head"><div><h1>更新网关</h1><p class="sub">正在更新，请不要关闭网关或断电。</p></div></div>
+    <div class="page-head"><div><h1>${T("nav_update")}</h1><p class="sub">${T("upd_busy_sub")}</p></div></div>
     <div class="card panel">
-      <div class="banner info">正在更新，网关会重启，一般 1～2 分钟。在线设备会断开一下再自动连上，这个页面会自动恢复。</div>
-      <p style="margin:0">当前步骤：<b id="up-step">准备中</b> <span class="muted small" id="up-elapsed"></span></p>
-      <details class="adv"><summary>更新输出</summary><pre class="update-log" id="up-log"></pre></details>
+      <div class="banner info">${T("upd_busy_banner")}</div>
+      <p style="margin:0">${T("upd_step")}<b id="up-step">${T("upd_preparing")}</b> <span class="muted small" id="up-elapsed"></span></p>
+      <details class="adv"><summary>${T("upd_output")}</summary><pre class="update-log" id="up-log"></pre></details>
     </div>`;
   const started = (u.started || Date.now() / 1000) * 1000;
   let down = false;
   const show = (st) => {
-    $("up-step").textContent = down ? "网关正在重启，等它回来…" : (st && st.step) || "准备中";
+    $("up-step").textContent = down ? T("upd_restarting") : (st && st.step) || T("upd_preparing");
     const sec = Math.round((Date.now() - started) / 1000);
-    $("up-elapsed").textContent = `已用 ${sec} 秒` + (sec > 150 ? "。新版本启动得比较慢，5 分钟内起不来会自动退回原来的版本" : "");
+    $("up-elapsed").textContent = T("upd_elapsed", sec) + (sec > 150 ? T("upd_slow_suffix") : "");
     if (st && st.log) $("up-log").textContent = st.log.join("\n");
   };
   show(u);
@@ -1611,7 +2511,7 @@ function renderUpdating(root, u) {
     if (d.update.state === "running") return show(d.update);
     clearInterval(page.timer); page.timer = null;
     if (d.update.state === "done" && d.update.changed && !d.update.restart_needed) {
-      toast(`已更新到 ${d.update.to.short}，页面马上刷新`);
+      toast(T("upd_done_toast", d.update.to.short));
       setTimeout(() => location.reload(), 1500);
     } else {
       await openPage("update", true);
@@ -1619,7 +2519,9 @@ function renderUpdating(root, u) {
   }, 2000);
 }
 
+applyStatic();
 route();
+
 </script>
 </body>
 </html>

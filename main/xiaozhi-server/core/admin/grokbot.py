@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from core.agent.grokbot_client import Credentials, GrokBotClient, GrokBotError, LoginFlow
+from core.utils import language
 
 LOGIN_TIMEOUT = 900  # 和桌面 App 的 150 次轮询差不多
 
@@ -27,10 +28,11 @@ def summarize_agent(a: dict) -> dict:
 
 
 class GrokBotAdmin:
-    def __init__(self, cred_path: Path = None, logger=None, backend: str = None):
+    def __init__(self, cred_path: Path = None, logger=None, backend: str = None, config: dict = None):
         self.creds = Credentials(cred_path)
         self.logger = logger
         self.backend = backend  # 只在测试时指向假服务
+        self.config = config or {}  # 网关运行配置：只用来选后台语言，不读写配置值
         self._client: Optional[GrokBotClient] = None
         self._approved = False  # 这次登录已经拿到 token
         self._flow: Optional[LoginFlow] = None
@@ -39,6 +41,9 @@ class GrokBotAdmin:
         self._bots: Optional[List[dict]] = None
         self._bots_at = 0.0
         self._bots_error = ""
+
+    def _msg(self, en: str, zh: str) -> str:
+        return language.msg(self.config, en, zh)
 
     def _log(self, level: str, msg: str) -> None:
         if self.logger:
@@ -89,7 +94,7 @@ class GrokBotAdmin:
             ok = await self.client().poll_login(flow, timeout=LOGIN_TIMEOUT)
             if ok:
                 self._approved = True
-                self._result = {"ok": True, "note": "登录成功", "at": time.time()}
+                self._result = {"ok": True, "note": self._msg("Signed in", "登录成功"), "at": time.time()}
                 self._log("info", "Grok Bot 登录成功")
                 self.client().conn = None
                 try:
@@ -97,16 +102,22 @@ class GrokBotAdmin:
                 except GrokBotError as e:
                     self._log("warning", f"登录后读取 Bot 列表失败：{e.detail}")
             else:
-                self._result = {"ok": False, "note": "没有在浏览器里批准，或者等待超时", "at": time.time()}
+                self._result = {"ok": False,
+                                "note": self._msg("Not approved in the browser, or the wait timed out",
+                                                  "没有在浏览器里批准，或者等待超时"),
+                                "at": time.time()}
         except asyncio.CancelledError:
             if not self._approved:
-                self._result = {"ok": False, "note": "已取消", "at": time.time()}
+                self._result = {"ok": False, "note": self._msg("Cancelled", "已取消"), "at": time.time()}
             raise
         except GrokBotError as e:
-            self._result = {"ok": False, "note": f"登录失败：{e.detail}", "at": time.time()}
+            self._result = {"ok": False, "note": self._msg(f"Sign-in failed: {e.detail}",
+                                                           f"登录失败：{e.detail}"),
+                            "at": time.time()}
             self._log("warning", f"Grok Bot 登录失败：{e.detail}")
         except Exception as e:  # noqa: BLE001 —— 后台任务，出错要让页面看得到
-            self._result = {"ok": False, "note": f"登录出错：{e!r}", "at": time.time()}
+            self._result = {"ok": False, "note": self._msg(f"Sign-in error: {e!r}", f"登录出错：{e!r}"),
+                            "at": time.time()}
             self._log("error", f"Grok Bot 登录出错：{e!r}")
 
     async def cancel_login(self) -> None:

@@ -402,7 +402,7 @@ def test_status_checks_module_packages_and_sherpa_model(tmp_path, monkeypatch):
     model_dir.mkdir()
     p = tmp_path / ".config.yaml"
     p.write_text(
-        "selected_module:\n  ASR: SherpaASR\n  LLM: ClaudeAPI\n"
+        "language: zh\nselected_module:\n  ASR: SherpaASR\n  LLM: ClaudeAPI\n"
         f"ASR:\n  SherpaASR:\n    model_dir: {model_dir}\n", encoding="utf-8")
 
     def check(name):
@@ -440,7 +440,7 @@ def test_status_checks_packages_of_memory_module(tmp_path, monkeypatch):
     from core.admin.status import collect_status
 
     p = tmp_path / ".config.yaml"
-    p.write_text("selected_module:\n  Memory: mem0ai\n  LLM: ClaudeAPI\n", encoding="utf-8")
+    p.write_text("language: zh\nselected_module:\n  Memory: mem0ai\n  LLM: ClaudeAPI\n", encoding="utf-8")
     monkeypatch.setattr(deps, "missing_packages",
                         lambda section, type_: ("mem0",) if section == "Memory" else ())
     m = config_store.load_merged(custom_path=p)

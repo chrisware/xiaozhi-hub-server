@@ -22,6 +22,8 @@ import threading
 import time
 from pathlib import Path
 
+from core.utils import language
+
 SERVER_DIR = Path(__file__).resolve().parents[2]
 REPO_ROOT = SERVER_DIR.parents[1]
 CHECK_TIMEOUT = 30          # 检查更新时连远端最多等多久（秒）
@@ -39,16 +41,20 @@ class UpdateError(Exception):
 
 
 class Updater:
-    def __init__(self, root: Path = REPO_ROOT, state_dir: Path = None):
+    def __init__(self, root: Path = REPO_ROOT, state_dir: Path = None, config: dict = None):
         self.root = Path(root)
         self.state_dir = Path(state_dir) if state_dir else SERVER_DIR / "tmp"
         self.state_file = self.state_dir / "update-state.json"
         self.log_file = self.state_dir / "update.log"
         self.exit_file = self.state_dir / "update.exit"
+        self.config = config or {}  # 网关运行配置：只用来选后台语言，不读写配置值
         self.last_check = None
         self._lock = threading.Lock()  # 检查和开始更新不能同时动 git
         # 网关启动时的版本：磁盘上的代码更新了、服务还没重启时，运行中的仍是它
         self.running_commit = self._head()
+
+    def _msg(self, en: str, zh: str) -> str:
+        return language.msg(self.config, en, zh)
 
     # ---------- git ----------
 
@@ -113,16 +119,24 @@ class Updater:
         """当前版本、从哪里更新、能不能在后台更新（unsupported 非空时不能，说明原因）。"""
         info = {"current": {}, "running": {}, "branch": "", "source": {}, "unsupported": ""}
         if os.name == "nt":
-            info["unsupported"] = "Windows 上请按教程手动更新：在项目目录运行 git pull，再运行一次 install.ps1"
+            info["unsupported"] = self._msg(
+                "On Windows, update manually per the tutorial: run git pull in the project directory, then run "
+                "install.ps1 once more",
+                "Windows 上请按教程手动更新：在项目目录运行 git pull，再运行一次 install.ps1")
         if not (self.root / ".git").exists():
-            info["unsupported"] = "网关不是用 git 下载的，没法在后台更新。请重新运行一键安装命令，或手动下载新版本"
+            info["unsupported"] = self._msg(
+                "The hub wasn't installed with git, so it can't be updated from the console. Re-run the "
+                "one-line installer, or download the new version manually",
+                "网关不是用 git 下载的，没法在后台更新。请重新运行一键安装命令，或手动下载新版本")
             return info
         info["current"] = self._commit("HEAD")
         if self.running_commit and self.running_commit != info["current"].get("commit"):
             info["running"] = self._commit(self.running_commit)
         info["branch"] = self._out("symbolic-ref", "--short", "-q", "HEAD")
         if not info["branch"]:
-            info["unsupported"] = info["unsupported"] or "当前不在任何分支上，没法自动更新"
+            info["unsupported"] = info["unsupported"] or self._msg(
+                "The repo isn't on any branch, so automatic updating isn't possible",
+                "当前不在任何分支上，没法自动更新")
             return info
         info["source"] = self._source(info["branch"])
         return info
@@ -145,7 +159,9 @@ class Updater:
         if info["unsupported"]:
             return {**base, "state": "unsupported", "message": info["unsupported"]}
         if self.running():
-            return {**base, "state": "error", "message": "正在更新，请等更新结束再检查"}
+            return {**base, "state": "error",
+                    "message": self._msg("An update is running — check again once it finishes",
+                                         "正在更新，请等更新结束再检查")}
         src = info["source"]
         shallow = self._out("rev-parse", "--is-shallow-repository") == "true"
         fetch = [*_GIT_NET, "fetch", "--no-tags", "--quiet"]
@@ -160,7 +176,8 @@ class Updater:
             except subprocess.TimeoutExpired:
                 return {**base, "state": "error", "message": self._timeout_message(timeout)}
             except OSError as e:
-                return {**base, "state": "error", "message": f"运行 git 失败：{e}"}
+                return {**base, "state": "error",
+                        "message": self._msg(f"Running git failed: {e}", f"运行 git 失败：{e}")}
             if r.returncode == 0:
                 break
         else:
@@ -169,7 +186,8 @@ class Updater:
         head, new = info["current"]["commit"], self._out("rev-parse", "FETCH_HEAD")
         base["latest"] = self._commit(new)
         if new == head:
-            return {**base, "state": "latest", "message": "已经是最新版本"}
+            return {**base, "state": "latest", "message": self._msg("Already on the latest version",
+                                                                    "已经是最新版本")}
         if self._is_ancestor(head, new):
             base["behind"] = int(self._out("rev-list", "--count", f"{head}..{new}") or 0)
             base["commits"] = self._commits(f"{head}..{new}")
@@ -178,15 +196,24 @@ class Updater:
             base["behind"], base["commits"] = None, [{k: base["latest"][k] for k in ("short", "date", "subject")}]
         elif self._is_ancestor(new, head):
             return {**base, "state": "diverged",
-                    "message": "本地的版本比远端还新（有远端没有的提交），不用更新。要以远端为准请手动处理"}
+                    "message": self._msg(
+                        "The local version is newer than the remote (it has commits the remote doesn't); no "
+                        "update needed. To follow the remote instead, handle it manually",
+                        "本地的版本比远端还新（有远端没有的提交），不用更新。要以远端为准请手动处理")}
         else:
             return {**base, "state": "diverged",
-                    "message": f"本地有自己的提交，和远端分叉了，没法直接更新。请手动合并：git merge {src['remote']}/{src['branch']}"}
+                    "message": self._msg(
+                        f"The local repo has its own commits and has diverged from the remote, so it can't be "
+                        f"updated directly. Please merge manually: git merge {src['remote']}/{src['branch']}",
+                        f"本地有自己的提交，和远端分叉了，没法直接更新。请手动合并：git merge {src['remote']}/{src['branch']}")}
         files = self._dirty_files()
         if files:
             return {**base, "state": "dirty", "files": files,
-                    "message": "有新版本，但下面这些文件被改过，更新会和它们冲突。请先撤销（git checkout -- <文件>）或备份后再更新"}
-        return {**base, "state": "available", "message": "有新版本"}
+                    "message": self._msg(
+                        "There's a new version, but the files below were changed locally and the update would "
+                        "conflict with them. Revert them (git checkout -- <file>) or back them up first",
+                        "有新版本，但下面这些文件被改过，更新会和它们冲突。请先撤销（git checkout -- <文件>）或备份后再更新")}
+        return {**base, "state": "available", "message": self._msg("There's a new version", "有新版本")}
 
     def _shallow_since(self, fallback: str) -> str:
         """浅克隆本地最早那个提交（边界）的时间（同 update.sh）。
@@ -206,21 +233,34 @@ class Updater:
             return False
 
     def _timeout_message(self, timeout: int) -> str:
-        return (f"连接更新服务器超时（{timeout} 秒）。国内网络可能连不上 GitHub，可以稍后再试，"
-                f"或者给网关的仓库设置代理：git -C {self.root} config http.proxy http://代理地址:端口")
+        return self._msg(
+            f"Connecting to the update server timed out ({timeout} seconds). From some networks GitHub isn't "
+            f"reachable — try again later, or set a proxy for the hub's repo: git -C {self.root} config "
+            f"http.proxy http://proxy-host:port",
+            f"连接更新服务器超时（{timeout} 秒）。国内网络可能连不上 GitHub，可以稍后再试，"
+            f"或者给网关的仓库设置代理：git -C {self.root} config http.proxy http://代理地址:端口")
 
     def _fetch_error(self, stderr: str, src: dict) -> str:
         text = stderr.strip()
         last = text.splitlines()[-1] if text else ""
         if "couldn't find remote ref" in text or "no such ref" in text.lower():
-            return f"远端 {src['remote']}（{src['url']}）上没有 {src['branch']} 分支"
+            return self._msg(f"The branch {src['branch']} doesn't exist on the remote {src['remote']} "
+                             f"({src['url']})",
+                             f"远端 {src['remote']}（{src['url']}）上没有 {src['branch']} 分支")
         if "Could not resolve host" in text or "Failed to connect" in text or "Connection timed out" in text \
                 or "Operation timed out" in text or "Connection refused" in text or "too slow" in text:
-            return (f"连不上更新服务器（{last}）。国内网络可能连不上 GitHub，可以稍后再试，"
-                    f"或者给网关的仓库设置代理：git -C {self.root} config http.proxy http://代理地址:端口")
+            return self._msg(
+                f"Can't reach the update server ({last}). From some networks GitHub isn't reachable — try "
+                f"again later, or set a proxy for the hub's repo: git -C {self.root} config http.proxy "
+                f"http://proxy-host:port",
+                f"连不上更新服务器（{last}）。国内网络可能连不上 GitHub，可以稍后再试，"
+                f"或者给网关的仓库设置代理：git -C {self.root} config http.proxy http://代理地址:端口")
         if "Authentication failed" in text or "could not read Username" in text:
-            return f"远端要求登录（{src['url']}），后台没法输入账号密码。请确认仓库地址是公开的"
-        return f"检查更新失败：{last or '未知错误'}"
+            return self._msg(f"The remote ({src['url']}) requires a login, which the console can't do. Please "
+                             f"check that the repository URL is public",
+                             f"远端要求登录（{src['url']}），后台没法输入账号密码。请确认仓库地址是公开的")
+        return self._msg(f"Checking for updates failed: {last or 'unknown error'}",
+                         f"检查更新失败：{last or '未知错误'}")
 
     # ---------- 更新 ----------
 
@@ -259,14 +299,19 @@ class Updater:
         """在后台开始更新；不能开始时抛 UpdateError。马上返回，进度用 status() 查。"""
         with self._lock:
             if self.running():
-                raise UpdateError("已经在更新了，请等它结束")
+                raise UpdateError(self._msg("An update is already running — please wait for it to finish",
+                                            "已经在更新了，请等它结束"))
             info = self.version()
             if info["unsupported"]:
                 raise UpdateError(info["unsupported"])
             files = self._dirty_files()
             if files:
-                raise UpdateError("这些文件被改过，更新会和它们冲突：" + "、".join(files[:10]) +
-                                  "。请先撤销（git checkout -- <文件>）或备份后再更新")
+                raise UpdateError(self._msg("These files were changed locally and the update would conflict "
+                                            "with them: " + ", ".join(files[:10]) +
+                                            ". Please revert them (git checkout -- <file>) or back them up "
+                                            "first",
+                                            "这些文件被改过，更新会和它们冲突：" + "、".join(files[:10]) +
+                                            "。请先撤销（git checkout -- <文件>）或备份后再更新"))
             self.state_dir.mkdir(parents=True, exist_ok=True)
             self.exit_file.unlink(missing_ok=True)
             with open(self.log_file, "wb") as log:
@@ -328,9 +373,13 @@ class Updater:
             except OSError:
                 pass
         if status == "failed":
-            result["error"] = errors[-1] if errors else (lines[-1] if lines else "更新失败，没有输出")
+            result["error"] = errors[-1] if errors else (
+                lines[-1] if lines else self._msg("The update failed without output", "更新失败，没有输出"))
         elif status == "interrupted":
-            result["error"] = "更新没有正常结束（中途断电或进程被结束）。可以再点一次更新，会接着把它做完"
+            result["error"] = self._msg(
+                "The update didn't finish cleanly (the power went out or the process was killed). Press update "
+                "again and it will pick up where it stopped",
+                "更新没有正常结束（中途断电或进程被结束）。可以再点一次更新，会接着把它做完")
         # 代码换了但服务没重启（手动启动的服务，update.sh 不会替它重启）
         result["restart_needed"] = status == "done" and bool(head) and head != self.running_commit
         return result

@@ -1,6 +1,7 @@
 """管理后台页面接口：大模型、语音合成、意图识别的读写，切换失败回滚，表情单发。全部使用临时配置文件。"""
 
 import asyncio
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -14,6 +15,7 @@ from core.agent import llm_router, reports
 from core.providers.asr import doubao_stream
 
 CUSTOM_YAML = """\
+language: zh  # 断言基于中文文案；英文路径见 general/双语用例
 selected_module:
   LLM: ClaudeCLI
   Intent: nointent
@@ -165,8 +167,8 @@ def test_describe_asr_and_tts(cfg_path):
     asr = pages.describe_asr(merged(cfg_path))
     assert asr["selected"] and "label" in asr
     tts = pages.describe_tts(merged(cfg_path))
-    assert tts["voice"] == "zh-CN-XiaoxiaoNeural" and len(tts["voices"]) == 14
-    assert all(v["value"].startswith("zh-") for v in tts["voices"])
+    assert tts["voice"] == "zh-CN-XiaoxiaoNeural" and len(tts["voices"]) == 18
+    assert all(v["value"].startswith(("zh-", "en-")) for v in tts["voices"])
 
 
 def test_save_tts_voice(cfg_path):
@@ -257,6 +259,49 @@ async def test_llm_use_links_intent(client, cfg_path):
     assert r.status == 400
 
 
+async def test_general_language_round_trip(client, cfg_path):
+    """后台「通用」页的语言开关：写盘、load_merged 按新语言回填默认、运行配置同步。"""
+    d = await (await client.get("/admin/api/general")).json()
+    assert d["language"]["value"] == "zh" and d["language"]["options"][0]["value"] == "en"
+    r = await (await client.post("/admin/api/general", json={"language": "en"})).json()
+    assert r["ok"] and r["changed"] == ["language"]
+    m = merged(cfg_path)
+    assert m["language"] == "en"
+    assert m["prompt"].startswith("You are a concise")
+    assert m["TTS"]["EdgeTTS"]["voice"] == "en-NZ-MollyNeural"
+    assert client.handler.config.get("language") == "en"  # _push_config 同步进运行配置
+    d = await (await client.get("/admin/api/general")).json()
+    assert d["language"]["value"] == "en" and d["language"]["label"] == "Interface language"
+    r = await (await client.post("/admin/api/general", json={"language": "zh"})).json()
+    assert r["changed"] == ["language"] and "已经在使用" not in r["note"]
+    m = merged(cfg_path)
+    assert "你是" in m["prompt"] and m["TTS"]["EdgeTTS"]["voice"] == "zh-CN-XiaoxiaoNeural"
+    assert (await client.post("/admin/api/general", json={"language": "fr"})).status == 400
+
+
+async def test_switch_to_current_model_reports_unchanged(cfg_path):
+    """切到已经在用的模型：不重载，返回 unchanged 标记（前端不再靠比对中文文案）。"""
+    app = web.Application()
+    running = merged(cfg_path)  # 运行配置和磁盘一致，才算"没变化"
+    ah.AdminHandler(running, ws_server=None, config_path=cfg_path).register(app)
+    async with TestClient(TestServer(app)) as c:
+        await c.post("/admin/api/setup", json={"password": "pass-1234"})
+        r = await (await c.post("/admin/api/llm/use", json={"kind": "cli"})).json()
+        assert r["ok"] and r["applied"] and r["unchanged"] is True and r["note"] == "已经在使用"
+
+
+async def test_unauthorized_401_body_keeps_format(cfg_path):
+    """401 的响应体保持原来的单行 JSON（ensure_ascii=False、无缩进），只有文案跟语言走。"""
+    for lang, word in (("zh", "未登录"), ("en", "Not signed in")):
+        app = web.Application()
+        ah.AdminHandler({"language": lang, "selected_module": {}}, ws_server=None,
+                        config_path=cfg_path).register(app)
+        async with TestClient(TestServer(app)) as c:
+            r = await c.get("/admin/api/status")
+            assert r.status == 401
+            assert await r.text() == json.dumps({"ok": False, "error": word}, ensure_ascii=False)
+
+
 async def test_saving_non_default_model_updates_running_config(client):
     """后台保存不是默认的模型后，运行中的配置要跟着更新：呼名切模型照它判断是否配好、创建实例，不用重启。"""
     assert "DeepSeekLLM" not in client.handler.config["LLM"]
@@ -286,7 +331,7 @@ async def test_llm_and_page_endpoints(client):
     assert r.status == 400 and "思考力度" in (await r.json())["error"]
     assert (await client.get("/admin/api/asr")).status == 200
     tts = await (await client.get("/admin/api/tts")).json()
-    assert len(tts["voices"]) == 14
+    assert len(tts["voices"]) == 18
     assert (await client.get("/admin/api/tts/preview?voice=en-US-AvaNeural")).status == 400
     r = await client.post("/admin/api/tts", json={"voice": "zh-CN-YunxiNeural"})
     assert r.status == 200 and (await r.json())["changed"] == ["voice"]
@@ -538,13 +583,13 @@ async def test_kiosk_only_from_this_machine(kiosk, monkeypatch):
     monkeypatch.setattr(web.BaseRequest, "remote", property(lambda self: "192.168.1.20"))  # 局域网里的其他电脑
     for method, path, body in calls:
         r = await getattr(kiosk, method)(path, json=body)
-        assert r.status == 403 and (await r.json())["error"] == "仅限本机"
+        assert r.status == 403 and (await r.json())["error"] in ("仅限本机", "Local requests only")
 
 
 async def test_vendor_test_endpoint(client, monkeypatch):
     seen = {}
 
-    def fake_test(config):
+    def fake_test(config, merged=None):
         seen.update(config)
         return {"ok": False, "error": "API Key 不对或已失效"}
     monkeypatch.setattr(ah.AdminHandler, "_test_llm", staticmethod(fake_test))
@@ -727,7 +772,8 @@ async def test_vad_save_applies_to_running_instances(cfg_path):
 
 def test_asr_model_check_by_model_type(tmp_path):
     entry = {"type": "sherpa_onnx_local", "model_type": "funasr_nano", "model_dir": str(tmp_path)}
-    assert pages.asr_label(entry) == "本地识别 · Fun-ASR-Nano（sherpa-onnx），不需要联网"
+    assert pages.asr_label(entry, {"language": "zh"}) == "本地识别 · Fun-ASR-Nano（sherpa-onnx），不需要联网"
+    assert pages.asr_label(entry, {"language": "en"}).startswith("Local ASR")
     r = pages.asr_model_check(entry)
     assert r["ok"] is False and "llm.int8.onnx" in r["detail"]
     (tmp_path / "llm.int8.onnx").write_bytes(b"\0" * (101 * 1024 * 1024))
@@ -751,7 +797,8 @@ def test_default_xasr_entry_and_label(tmp_path):
     assert "hotwords" not in entry and pages.hotwords_supported(entry)
     words = pages.describe_hotwords({**cfg, "selected_module": {"ASR": "SherpaXASR"}})["words"]
     assert "Claude Code" in words and "StackChan" in words
-    assert pages.asr_label(entry) == "本地识别 · X-ASR 中英混合（sherpa-onnx），不需要联网"
+    assert pages.asr_label(entry, {"language": "zh"}) == "本地识别 · X-ASR 中英混合（sherpa-onnx），不需要联网"
+    assert pages.asr_label(entry, cfg).startswith("Local ASR")  # language=en（空配置即 fork 默认）
     tmpl = (Path(__file__).resolve().parents[4] / "scripts" / "config.template.yaml").read_text(encoding="utf-8")
     assert "ASR: SherpaXASR" in tmpl
 
@@ -800,7 +847,7 @@ async def test_hotwords_and_corrections_endpoints(cfg_path, monkeypatch):
         return {"asr": "new-asr"}
     monkeypatch.setattr(ah, "initialize_modules", fake_init)
     ws = SimpleNamespace(config_lock=asyncio.Lock(), _asr="old-asr")
-    running = {"selected_module": {"ASR": "SherpaXASR"}, "ASR": {}}
+    running = {"language": "zh", "selected_module": {"ASR": "SherpaXASR"}, "ASR": {}}
     app = web.Application()
     handler = ah.AdminHandler(running, ws_server=ws, config_path=cfg_path)
     handler.register(app)
@@ -903,10 +950,10 @@ async def test_asr_use_and_doubao_endpoints(cfg_path, monkeypatch):
     async def fake_check(config):
         return {"ok": True, "seconds": 0.3} if config.get("api_key") == "good-key" else {"ok": False, "error": "鉴权失败"}
     monkeypatch.setattr(doubao_stream, "check_connection", fake_check)
-    monkeypatch.setattr(pages, "asr_model_check", lambda entry: {"ok": True, "detail": "ok"}
+    monkeypatch.setattr(pages, "asr_model_check", lambda entry, merged=None: {"ok": True, "detail": "ok"}
                         if entry.get("type") == "sherpa_onnx_local" else None)
     ws = SimpleNamespace(config_lock=asyncio.Lock(), _asr="old-asr")
-    running = {"selected_module": {"ASR": "SherpaXASR"}, "ASR": {}}
+    running = {"language": "zh", "selected_module": {"ASR": "SherpaXASR"}, "ASR": {}}
     app = web.Application()
     ah.AdminHandler(running, ws_server=ws, config_path=cfg_path).register(app)
     async with TestClient(TestServer(app)) as c:

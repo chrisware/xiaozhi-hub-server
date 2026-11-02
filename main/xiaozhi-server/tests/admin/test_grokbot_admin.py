@@ -16,6 +16,7 @@ from core.agent.grokbot_client import Credentials
 from core.agent.grokbot_client import _sleep as real_sleep  # conftest 把 asyncio.sleep 改成了不等待的桩
 
 CUSTOM_YAML = """\
+language: zh
 selected_module:
   LLM: ClaudeCLI
   Intent: nointent
@@ -96,7 +97,7 @@ def test_save_grok_bots_name_collision_and_validation(cfg_path):
 
 def test_auto_alias_when_no_call_names_section(tmp_path):
     p = tmp_path / ".config.yaml"
-    p.write_text("selected_module:\n  LLM: ClaudeCLI\nLLM:\n  ClaudeCLI:\n    type: claude_cli\n", encoding="utf-8")
+    p.write_text("language: zh\nselected_module:\n  LLM: ClaudeCLI\nLLM:\n  ClaudeCLI:\n    type: claude_cli\n", encoding="utf-8")
     pages.save_grok_bots({"bots": [{"id": "id-1", "name": "孙悟空"}]}, merged(p), p)
     models = merged(p)["call_names"]["models"]
     assert models["GrokBot_孙悟空"] == ["孙悟空"] and models["ClaudeCLI"] == ["claude", "cloud", "clod", "clot", "克劳德"]
@@ -152,7 +153,7 @@ async def client(cfg_path, tmp_path):
     auth_server = TestServer(auth.app)
     await auth_server.start_server()
     app = web.Application()
-    config = {"selected_module": {"LLM": "ClaudeCLI", "Intent": "nointent"}, "LLM": {"ClaudeCLI": {"type": "claude_cli"}},
+    config = {"language": "zh", "selected_module": {"LLM": "ClaudeCLI", "Intent": "nointent"}, "LLM": {"ClaudeCLI": {"type": "claude_cli"}},
               "call_names": {}}
     handler = ah.AdminHandler(config, ws_server=None, config_path=cfg_path, grokbot_credentials=tmp_path / "creds.json")
     handler.grokbot.backend = f"http://127.0.0.1:{auth_server.port}"

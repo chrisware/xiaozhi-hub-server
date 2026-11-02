@@ -15,7 +15,9 @@ import core.providers.llm.openai.openai as openai_llm
 
 
 REQ = httpx.Request("POST", "https://zenmux.ai/api/v1")
-CONFIG = {"model_name": "m", "api_key": "sk-x", "timeout": 20, "base_url": "https://zenmux.ai/api/v1"}
+# language=zh：这里断言的是中文提示文案；英文文案由 tests/admin 的 general/双语用例覆盖
+CONFIG = {"model_name": "m", "api_key": "sk-x", "timeout": 20, "base_url": "https://zenmux.ai/api/v1",
+          "language": "zh"}
 
 
 def fake_provider(monkeypatch, response):
