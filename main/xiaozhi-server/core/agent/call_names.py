@@ -27,7 +27,13 @@ if TYPE_CHECKING:
 TAG = __name__
 
 DEFAULT_MODELS = {"ClaudeCLI": ["claude", "cloud", "clod", "clot", "克劳德"]}
-DEFAULT_REPLY = "我在"
+DEFAULT_REPLY = "我在"  # [xiaozhi-hub] zh 兜底；按网关语言取 default_reply(config)
+
+
+def default_reply(config) -> str:
+    """只喊称呼时的默认回复（language=en 时是 "I'm here"）。"""
+    from core.utils import language
+    return language.msg(config, "I'm here", DEFAULT_REPLY)
 # 发缓存的音频前等一会儿：设备收到 tts start 后要先切到说话状态（会清空解码队列），切换完成前收到的音频会被丢掉。
 # 正常合成时中间有约 2 秒的合成时间，不会碰到；缓存的音频紧跟着就到，不等的话设备只显示文字、没有声音。
 # 在 hello 里声明 ready_on_tts_start 的设备按顺序处理消息和音频，收到 tts start 马上就能播，不用等
@@ -214,9 +220,9 @@ async def _fill_cache(conn: "ConnectionHandler", text: str) -> None:
     await asyncio.shield(_filling[key])
 
 
-def reply_text(cfg: dict) -> str:
-    """只喊称呼时回的话。"""
-    return one_segment((cfg or {}).get("reply") or "") or DEFAULT_REPLY
+def reply_text(cfg: dict, config=None) -> str:
+    """只喊称呼时回的话。config 是完整合并配置（取 language 用）。"""
+    return one_segment((cfg or {}).get("reply") or "") or default_reply(config)
 
 
 async def warm_up(conn: "ConnectionHandler") -> None:
@@ -230,7 +236,7 @@ async def warm_up(conn: "ConnectionHandler") -> None:
         await asyncio.sleep(0.2)
     if not conn.tts:
         return
-    text = reply_text(cfg)
+    text = reply_text(cfg, conn.config)
     if await asyncio.to_thread(_load_cached, _cache_key(conn, text)) is None:
         await _fill_cache(conn, text)
 
@@ -322,18 +328,24 @@ async def handle_call_name(conn: "ConnectionHandler", text: str):
         ok = False
     if not ok:
         conn.logger.bind(tag=TAG).warning(f"呼名 {model}：这个模型没有配置好或加载失败，不切换")
-        if await _speak(conn, text, f"{llm_router.model_label(model)} 还没配置好，请到管理后台检查"):
+        from core.utils import language
+        if await _speak(conn, text, language.msg(
+                conn.config,
+                f"{llm_router.model_label(model)} isn't set up yet — have a look in the admin console.",
+                f"{llm_router.model_label(model)} 还没配置好，请到管理后台检查")):
             return None
         return rest or text
     if rest:
         conn.logger.bind(tag=TAG).info(f"呼名 {model}：去掉称呼后交给模型：{rest}")
         return rest
 
-    reply = reply_text(cfg)
-    # 切回一个在外面干活的 Bot（Grok Bot）：它做完的活还没念过的，跟在"我在"后面一起念
+    reply = reply_text(cfg, conn.config)
+    # 切回一个在外面干活的 Bot（Grok Bot）：它做完的活还没念过的，跟在回复后面一起念
     bot_id, pending = _pending_report(conn, model)
     if pending:
-        reply = f"{reply}。{pending}"
+        from core.utils import language
+        reply = f"{reply}. {pending}" if language.get_language(conn.config) == language.EN \
+            else f"{reply}。{pending}"
     if not await _speak(conn, text, reply, cache=not pending):
         conn.logger.bind(tag=TAG).warning("呼名：TTS 尚未就绪，无法回复，按普通对话处理")
         if pending:

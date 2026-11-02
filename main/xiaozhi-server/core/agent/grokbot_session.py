@@ -46,9 +46,21 @@ VOICE_MESSAGES = {
     ErrorKind.UNKNOWN: "出了点小问题，再说一次试试。",
 }
 
+# [xiaozhi-hub] language=en 时的同一批话
+VOICE_MESSAGES_EN = {
+    ErrorKind.AUTH: "The Grok Bot isn't signed in, or the login expired — sign in again in the admin console.",
+    ErrorKind.SERVER: "Can't reach the Grok Bot right now — let's try again in a bit.",
+    ErrorKind.TIMEOUT: "The Grok Bot's taking too long on that — I'll stop waiting and tell you when it finishes.",
+    ErrorKind.STALLED: "That didn't send — please say it again.",
+    ErrorKind.SEND_FAILED: "That didn't send — please say it again.",
+    ErrorKind.PROCESS_EXITED: "The connection to the Grok Bot dropped — say that again and I'll retry.",
+    ErrorKind.UNKNOWN: "Something went a little wrong — say that again.",
+}
 
-def voice_for(kind: ErrorKind) -> str:
-    return VOICE_MESSAGES.get(kind) or VOICE_MESSAGES[ErrorKind.UNKNOWN]
+
+def voice_for(kind: ErrorKind, lang: str = "zh") -> str:
+    table = VOICE_MESSAGES_EN if lang == "en" else VOICE_MESSAGES
+    return table.get(kind) or table[ErrorKind.UNKNOWN]
 
 
 @dataclass
@@ -56,6 +68,7 @@ class GrokBotSessionConfig:
     bot_id: str
     bot_name: str = ""
     voice_hint: str = ""  # 附在每句话后面的提示，让 Bot 口语化简短回答；留空不加
+    lang: str = "zh"  # [xiaozhi-hub] 播报话术语言（voice_for 选中文/英文）
     echo_timeout: float = 10  # 发送后这么久没在事件流里看到回显，就重连并补拉
     poll_interval: float = 12  # 等回复期间轮询对话尾部的间隔
     done_delay: float = 1.5  # 收到过回复、Bot 空闲后再等这么久没新动静才算本轮结束
@@ -444,7 +457,10 @@ class GrokBotSession(AgentSession):
         bot_id = cfg.bot_id
         queue = self._sub.queue
         nonce = str(uuid.uuid4())
-        sent_text = f"{text}（{cfg.voice_hint}）" if cfg.voice_hint else text
+        if cfg.voice_hint:
+            sent_text = f"{text} ({cfg.voice_hint})" if cfg.lang == "en" else f"{text}（{cfg.voice_hint}）"
+        else:
+            sent_text = text
         seen: Dict[str, str] = {}
 
         # 上一件事被打断后它又回了话，先念了再发新的
@@ -469,7 +485,7 @@ class GrokBotSession(AgentSession):
             self._log("warning", f"读对话尾部 {cfg.baseline_timeout:g} 秒没返回，跳过，改用回显序号分新旧")
         except GrokBotError as e:
             if e.kind == ErrorKind.AUTH:
-                yield Error(e.kind, e.detail, voice=voice_for(e.kind))
+                yield Error(e.kind, e.detail, voice=voice_for(e.kind, self.cfg.lang))
                 return
             have_baseline = False
             self._log("warning", f"读对话尾部失败，改用回显序号分新旧：{e.detail}")
@@ -497,7 +513,7 @@ class GrokBotSession(AgentSession):
         if failure is not None:
             e = failure
             if e.kind == ErrorKind.AUTH:
-                yield Error(e.kind, e.detail, voice=voice_for(e.kind))
+                yield Error(e.kind, e.detail, voice=voice_for(e.kind, self.cfg.lang))
                 return
             # 结果不明确：查送达记录。只有查不到记录才是真的没送到（也只有这时才能用同一个 nonce 重发，这里不重发）
             try:
@@ -541,7 +557,7 @@ class GrokBotSession(AgentSession):
         except (AgentSessionError, GrokBotError) as e:
             # 话已经送到了，等回复时出错（轮询失败等）：Bot 照样在做，留人盯着（盯的时候再出错就停）
             self._start_watch(tracker, held)
-            yield Error(e.kind, e.detail, voice=voice_for(e.kind))
+            yield Error(e.kind, e.detail, voice=voice_for(e.kind, self.cfg.lang))
 
 
     async def hand_off(self, text: str) -> None:

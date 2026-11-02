@@ -84,6 +84,8 @@ class TTSProviderBase(ABC):
         # 流式滑动窗口：待匹配的缓存文本
         self._pending_prefix = ""
         self.tts_text_buff = []
+        # [xiaozhi-hub] 加 ASCII "."：英文句子只以句号结尾，原来不切段，整段要等到 flush 才合成。
+        # 小数（3.5）、版本号、省略号在 _ascii_period_ok 里排除
         self.punctuations = (
             "。",
             "？",
@@ -93,6 +95,7 @@ class TTSProviderBase(ABC):
             "；",
             ";",
             "：",
+            ".",
         )
         self.first_sentence_punctuations = (
             "，",
@@ -107,6 +110,7 @@ class TTSProviderBase(ABC):
             "；",
             ";",
             "：",
+            ".",
         )
         self.tts_stop_request = False
         self.processed_chars = 0
@@ -366,8 +370,8 @@ class TTSProviderBase(ABC):
             else:
                 sentence_id = str(uuid.uuid4().hex)
                 conn.sentence_id = sentence_id
-        # 对于单句的文本，进行分段处理
-        segments = re.split(r"([。！？!?；;\n])", content_detail)
+        # 对于单句的文本，进行分段处理（ASCII "." 也切，但小数/省略号不切：前后不能是数字或点）
+        segments = re.split(r"([。！？!?；;\n]|(?<![.\d])\.(?![.\d]))", content_detail)
         for seg in segments:
             self.tts_text_queue.put(
                 TTSMessageDTO(
@@ -620,14 +624,27 @@ class TTSProviderBase(ABC):
                 continue
             return end - 1
         return -1
-
-    # [xiaozhi-hub] 少于这么多个字（不算空格、标点、表情）的段并到下一段
+    # [xiaozhi-hub] 少于这么多个字（不算空格、标点、表情）的段并到下一段，不单独合成（每段合成都有固定开销，
+    # 段越碎停顿越多）。顺延到下一个能切的标点，没有就等后面的文字（最后由 flush 兜底）
     MIN_SEGMENT_CHARS = 6
 
     @classmethod
     def _too_short(cls, segment_raw: str) -> bool:
         text = textUtils.get_string_no_punctuation_or_emoji(segment_raw)
         return len(re.sub(r"\s", "", text)) < cls.MIN_SEGMENT_CHARS
+
+    def _period_ok(self, text: str, i: int) -> bool:
+        """ASCII "." 是否句子结尾：小数（3.5）、省略号不算；流末尾、点前面是数字时先等一等
+        （可能是 "10." + "5"）——flush（tts_stop_request）时才确定切。"""
+        prev = text[i - 1] if i > 0 else ""
+        nxt = text[i + 1] if i + 1 < len(text) else None
+        if prev == "." or nxt == ".":
+            return False  # 省略号的点
+        if nxt is not None and nxt.isdigit():
+            return False  # 小数：3.5、10.30
+        if nxt is None:
+            return bool(self.tts_stop_request) or not prev.isdigit()
+        return True
 
     def _get_segment_text(self) -> Optional[str]:
         # 合并当前全部文本并处理未分割部分
@@ -642,10 +659,15 @@ class TTSProviderBase(ABC):
             else self.punctuations
         )
 
+        def cuttable(i: int) -> bool:
+            return current_text[i] in punctuations_to_use and (
+                current_text[i] != "." or self._period_ok(current_text, i)
+            )
+
         # 取每种标点最后出现位置的最早者作为切分点（与逐个 rfind 再取最小值等价）
         last_seen = {}
         for i, ch in enumerate(current_text):
-            if ch in punctuations_to_use:
+            if cuttable(i):
                 last_seen[ch] = i
         last_punct_pos = min(last_seen.values(), default=-1)
 
@@ -654,13 +676,9 @@ class TTSProviderBase(ABC):
             cut_pos = self._quote_safe_cut(
                 current_text, last_punct_pos, punctuations_to_use
             )
-        # [xiaozhi-hub] 太短的段（"好，""嗯。"）不单独合成，并到后面一起：每段合成都有固定开销，
-        # 段越碎句间停顿越多。顺延到下一个能切的标点，没有就等后面的文字（最后由 flush 兜底）
+        # 太短的段（"好，""嗯。"）不单独合成，并到后面一起：每段合成都有固定开销，段越碎停顿越多
         while cut_pos != -1 and self._too_short(current_text[: cut_pos + 1]):
-            nxt = next(
-                (i for i in range(cut_pos + 1, len(current_text)) if current_text[i] in punctuations_to_use),
-                -1,
-            )
+            nxt = next((i for i in range(cut_pos + 1, len(current_text)) if cuttable(i)), -1)
             cut_pos = (
                 self._quote_safe_cut(current_text, nxt, punctuations_to_use)
                 if nxt != -1

@@ -30,11 +30,13 @@ from core.agent.grokbot_client import Credentials, default_credentials_path, get
 from core.agent.grokbot_session import GrokBotSession, GrokBotSessionConfig, voice_for
 from core.agent.session_store import SessionStore
 from core.providers.llm.claude_cli.claude_cli import ConnState, LLMProvider as AgentProvider, _num
+from core.utils import language
 
 TAG = __name__
 logger = setup_logging()
 
 DEFAULT_FILLER = "交给 Grok Bot 了"
+DEFAULT_FILLER_EN = "Right, handing that to the Grok Bot"
 DEFAULT_FILLER_DELAY = 6  # 简单问题 3–6 秒就回（首字中位数约 4.6 秒），等久一点再说填充语，免得提示语占着合成、把正式回复挤到后面
 # 附在每句话后面：Bot 的回复是给屏幕看的，不提示会写一大段列表。会出现在 App 的对话里，配置里填空字符串可关掉
 DEFAULT_VOICE_HINT = "回复会被语音朗读：请口语化、尽量简短，不要用列表、表格和代码"
@@ -75,11 +77,13 @@ class LLMProvider(AgentProvider):
         self.session_config = GrokBotSessionConfig(
             bot_id=self.bot_id,
             bot_name=self.bot_name,
+            lang=language.get_language(config),
             voice_hint=str(config.get("voice_hint", DEFAULT_VOICE_HINT) or "").strip(),
             echo_timeout=_num(config, "echo_timeout_seconds", 10),
             poll_interval=_num(config, "poll_interval_seconds", 12),
         )
-        self._init_common(config, filler_default=DEFAULT_FILLER, filler_delay_default=DEFAULT_FILLER_DELAY)
+        self._init_common(config, filler_default=DEFAULT_FILLER, filler_delay_default=DEFAULT_FILLER_DELAY,
+                          filler_default_en=DEFAULT_FILLER_EN)
         self.store = SessionStore(Path(get_project_dir()) / "data" / "agent_sessions.json", "grok_bot")
         self._start_loop()
         self._self_check()
@@ -110,7 +114,7 @@ class LLMProvider(AgentProvider):
             f"{time.strftime('%Y-%m-%d %H:%M', time.localtime(status['expires_at']))}")
 
     def _voice_error(self, kind: ErrorKind) -> str:
-        return voice_for(kind)
+        return voice_for(kind, self.lang)
 
     def _stall_note(self, st: ConnState) -> str:
         # 发送一开始会话就报 tools_running=1，看门狗只可能在发出去之前触发：这句话没发出去，播报"发送失败"

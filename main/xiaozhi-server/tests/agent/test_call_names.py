@@ -73,8 +73,12 @@ def reply_cache(tmp_path, monkeypatch):
 
 def make_conn(cfg=None):
     logger = SimpleNamespace(info=lambda *a, **k: None, warning=lambda *a, **k: None)
+    # 本文件的呼名话术按中文测（"嗨" 是中文呼名）；英文话术见 test_call_names_english_default
+    config = {"language": "zh"}
+    if cfg is not None:
+        config["call_names"] = cfg
     return SimpleNamespace(
-        config={"call_names": cfg} if cfg is not None else {},
+        config=config,
         logger=SimpleNamespace(bind=lambda **k: logger),
         dialogue=SimpleNamespace(put=conn_messages.append),
         client_abort=True, sentence_id=None, tts=object(),
@@ -124,6 +128,19 @@ async def test_handle_unready_model_tells_user(spoken):
     c = make_conn({"models": {"KimiLLM": ["kimi"]}})
     assert await handle_call_name(c, "嗨 kimi，你好") is None  # 不交给当前模型，提示还没配置好
     assert spoken["tts"] == ["Kimi 还没配置好，请到管理后台检查"]
+
+
+async def test_english_default_replies(spoken):
+    """language=en（本 fork 默认）：只喊称呼回 "I'm here"，未配置提示是英文。"""
+    c = make_conn()
+    c.config["language"] = "en"
+    assert await handle_call_name(c, "Hi, cloud.") is None
+    assert spoken["tts"] == ["I'm here"]
+    spoken["unready"].add("KimiLLM")
+    c2 = make_conn({"models": {"KimiLLM": ["kimi"]}})
+    c2.config["language"] = "en"
+    assert await handle_call_name(c2, "hey kimi") is None
+    assert spoken["tts"][-1] == "Kimi isn't set up yet — have a look in the admin console."
 
 
 async def test_handle_only_call_name_replies_without_model(spoken):

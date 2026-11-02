@@ -39,6 +39,21 @@ VOICE_ERROR_MESSAGES = {
     ErrorKind.UNKNOWN: "出了点小问题，再说一次试试。",
 }
 
+# [xiaozhi-hub] language=en 时的同一批话
+VOICE_ERROR_MESSAGES_EN = {
+    ErrorKind.NOT_INSTALLED: "I can't find Claude Code on this machine — please install and sign into it first.",
+    ErrorKind.AUTH: "Claude Code isn't signed in, or the login expired. Please sign in again on the computer.",
+    ErrorKind.RATE_LIMIT: "Claude has hit its usage limit — let's try again a bit later.",
+    ErrorKind.BILLING: "Claude's account looks out of credit — please check the account.",
+    ErrorKind.SERVER: "Claude's side is having a moment — let's try again in a bit.",
+    ErrorKind.SESSION_MISSING: "Couldn't find the earlier conversation — let's start fresh.",
+    ErrorKind.PROCESS_EXITED: "Claude Code quit unexpectedly — say that again and I'll try once more.",
+    ErrorKind.TIMEOUT: "That was taking too long, so I stopped it. Say continue if you'd like it picked back up.",
+    ErrorKind.STALLED: "Claude hasn't responded — the network or service may be slow, so I've stopped. Say continue later to resume.",
+    ErrorKind.SEND_FAILED: "That didn't send — please say it again.",
+    ErrorKind.UNKNOWN: "Something went a little wrong — say that again.",
+}
+
 
 @dataclass
 class TextDelta:

@@ -19,6 +19,7 @@ CONFIG = {
         "GrokBot_小助手": {"type": "grok_bot", "bot_id": "bot-1", "bot_name": "小助手"},
     },
     "chat_history": {"max_messages": 6, "max_tokens": 8000, "summary_min": 2},
+    "language": "zh",  # 本文件的话术断言按中文；英文话术单独用 EN_CONN 测
 }
 
 
@@ -396,6 +397,36 @@ def test_confirm_and_cancel(text, confirm, cancel):
     assert clear_command.is_cancel(text) is cancel
 
 
+@pytest.mark.parametrize("text", ["clear my chat history", "Delete all the conversations.", "remove chat history",
+                                  "wipe the history", "reset the conversation", "clear all our chats",
+                                  "erase my message history", "forget everything"])
+def test_clear_phrases_en(text):
+    assert clear_command.is_clear(text, "en")
+
+
+@pytest.mark.parametrize("text", ["don't clear my chat history", "clear the cache", "what is chat history",
+                                  "I want to know how to delete my WhatsApp chat history so it can be recovered",
+                                  "delete the file"])
+def test_not_clear_phrases_en(text):
+    assert not clear_command.is_clear(text, "en")
+
+
+@pytest.mark.parametrize("text,confirm,cancel", [
+    ("yes", True, False), ("yeah", True, False), ("go ahead", True, False), ("do it", True, False),
+    ("clear it", True, False), ("uh huh", True, False), ("no thanks", False, True), ("cancel", False, True),
+    ("never mind", False, True), ("don't", False, True), ("what's the weather", False, False),
+])
+def test_confirm_and_cancel_en(text, confirm, cancel):
+    assert clear_command.is_confirm(text, "en") is confirm
+    assert clear_command.is_cancel(text, "en") is cancel
+
+
+def test_result_text_en():
+    text = clear_command.result_text({"deleted": 2, "agents": ["Claude Code", "Grok"]}, "en")
+    assert text.startswith(clear_command.DONE_EN) and "Claude Code and Grok haven't been touched" in text
+    assert clear_command.result_text({"deleted": 2, "agents": []}, "en") == clear_command.DONE_EN
+
+
 def run(coro):
     return asyncio.get_event_loop_policy().new_event_loop().run_until_complete(coro)
 
@@ -447,6 +478,17 @@ def test_voice_clear_confirmation_expires(spoken, monkeypatch):
     conn.chat_clear_asked -= clear_command.CONFIRM_SECONDS + 1
     assert run(clear_command.handle(conn, "确定")) == "确定"
     assert "<clear>" not in spoken
+
+
+def test_voice_clear_english_flow(spoken):
+    conn = make_conn(device="dev-en", config=dict(CONFIG, language="en"))
+    assert run(clear_command.handle(conn, "clear my chat history")) is None
+    assert spoken == [clear_command.ASK_EN]
+    assert run(clear_command.handle(conn, "yes")) is None
+    assert spoken[1:] == ["<clear>", "<notify>", clear_command.DONE_EN]
+    conn = make_conn(device="dev-en2", config=dict(CONFIG, language="en"))
+    run(clear_command.handle(conn, "delete the history"))
+    assert run(clear_command.handle(conn, "no thanks")) is None and spoken[-1] == clear_command.KEPT_EN
 
 
 def test_voice_clear_now_uses_online_connections(project, monkeypatch):

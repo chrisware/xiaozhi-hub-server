@@ -33,11 +33,14 @@ from typing import Dict, Optional
 from config.config_loader import get_project_dir
 from config.logger import setup_logging
 from core.agent import reports
-from core.agent.agent_session import STARTING_LABELS, Activity, AgentSessionError, Done, Error, ErrorKind, TextDelta
+from core.agent.agent_session import (
+    STARTING_LABELS, VOICE_ERROR_MESSAGES_EN, Activity, AgentSessionError, Done, Error, ErrorKind, TextDelta,
+)
 from core.agent.claude_session import ClaudeSession, ClaudeSessionConfig
 from core.agent.session_store import SessionStore, choose_resume
 from core.agent.voice_commands import DEFAULT_RESUME_KEYWORDS, match_resume, match_stop
 from core.providers.llm.base import LLMProviderBase
+from core.utils import language
 from core.utils import textUtils, turn_gen
 from core.utils.prompt_manager import EMOJI_List
 
@@ -64,9 +67,15 @@ STOPPED_NOTICE = "😶好，已经让 Claude 停下了。"
 PROGRESS_MAX_FACTOR = 4  # 进度提示的间隔逐次翻倍，最多拉长到 4 倍（默认 30 → 60 → 120 秒）
 
 
-def elapsed_text(seconds: float) -> str:
+def elapsed_text(seconds: float, lang: str = "zh") -> str:
     """把已用时间说成口语：95 秒 → "1 分半"，185 秒 → "3 分钟"。"""
     minutes, rest = divmod(int(seconds), 60)
+    if lang == "en":
+        if minutes == 0:
+            return f"{rest} seconds"
+        if minutes == 1:
+            return "a minute and a half" if rest >= 30 else "one minute"
+        return f"{minutes} and a half minutes" if rest >= 30 else f"{minutes} minutes"
     if minutes == 0:
         return f"{rest} 秒"
     return f"{minutes} 分半" if rest >= 30 else f"{minutes} 分钟"
@@ -86,8 +95,13 @@ def single_sentence(text: str) -> str:
     这里把句中的停顿标点换成空格，结尾统一用句号。
     """
     body = re.sub(r"[，,、~～；;：:]+", " ", text or "").strip()
+    body = re.sub(r"\s+", " ", body)  # 标点换成空格后可能留下双空格
     body = body.rstrip("。.！!？? ")
-    return f"{body}。" if body else ""
+    if not body:
+        return ""
+    # [xiaozhi-hub] 纯英文句子结尾用 ASCII 点，别挂个中文句号（屏幕字幕会显示它）
+    tail = "。" if re.search(r"[\u4e00-\u9fff]", body) else "."
+    return f"{body}{tail}"
 
 
 def find_claude_cli(configured: Optional[str] = None) -> Optional[str]:
@@ -230,8 +244,11 @@ class LLMProvider(LLMProviderBase):
         self._start_loop()
         self._self_check()
 
-    def _init_common(self, config: dict, filler_default: str = "好的，我看一下", filler_delay_default: float = 2) -> None:
+    def _init_common(self, config: dict, filler_default: str = "好的，我看一下", filler_delay_default: float = 2,
+                     filler_default_en: str = "Right, let me have a look") -> None:
         """和具体 Agent 无关的部分：超时、填充语、进度提示、连接状态表。"""
+        # [xiaozhi-hub] 播报话术按网关 language 选（en 取英文，见 core/utils/language.py）
+        self.lang = language.get_language(config)
         # 超时类配置填 0 表示不限制。单轮默认 10 分钟：Claude 干长任务时设备陪着等，期间连接不会因"没人说话"断开
         self.turn_timeout = _num(config, "turn_timeout_seconds", 600) or float("inf")
         # 无响应超时：Claude Code 连续这么久没有任何事件（文字、思考、工具调用……）就判定卡住。
@@ -239,13 +256,17 @@ class LLMProvider(LLMProviderBase):
         self.stall_timeout = _num(config, "stall_timeout_seconds", 30) or float("inf")
         # 干活期间这么久没开口，就说一句进度，让人知道还在做；填 0 关闭。之后间隔逐渐拉长（见 _progress_gap），并报已用时间
         self.progress_interval = _num(config, "progress_interval_seconds", 30)
-        self.progress_reply = single_sentence(config.get("progress_reply") or DEFAULT_PROGRESS_REPLY)
+        en = self.lang == language.EN
+        self.progress_reply = single_sentence(config.get("progress_reply") or (
+            "Still working on it" if en else DEFAULT_PROGRESS_REPLY))
         # 第二次起的提示："还在处理，已经 3 分钟了"。自定义了提示语时用它开头
-        self.progress_prefix = "还在处理" if not config.get("progress_reply") else self.progress_reply.rstrip("。")
+        self.progress_prefix = (self.progress_reply.rstrip("。") if config.get("progress_reply")
+                                else ("Still working on it" if en else "还在处理"))
         self.idle_timeout = _num(config, "idle_timeout_seconds", 300)  # 0：每轮结束就关闭进程
         self.resume_window = _num(config, "resume_window_minutes", 120)  # 0：不自动接续
         self.resume_keywords = list(config.get("resume_keywords") or DEFAULT_RESUME_KEYWORDS)
-        self.filler = single_sentence(config.get("first_reply_filler", filler_default))
+        self.filler = single_sentence(config.get("first_reply_filler",
+                                                 filler_default_en if en else filler_default))
         self.filler_delay = _num(config, "filler_delay_seconds", filler_delay_default)
         self.abandon_grace = 5.0  # 发出中断后等这么久，这一轮还没停下就强制关闭进程
         # 设备不听了以后，Claude 在后台最多再做多久（从这一轮开始算），到时间就停下并汇报；填 0 不转后台（照旧中断）
@@ -261,7 +282,27 @@ class LLMProvider(LLMProviderBase):
 
     def _voice_error(self, kind: ErrorKind) -> str:
         """超时、卡住等由 provider 自己判定的错误，播报给用户的话。"""
+        if self.lang == language.EN:
+            return VOICE_ERROR_MESSAGES_EN.get(kind, VOICE_ERROR_MESSAGES_EN[ErrorKind.UNKNOWN])
         return Error(kind).voice_message
+
+    # ---------- 后台播报话术（按语言） ----------
+
+    def _stopped_notice(self) -> str:
+        if self.lang == language.EN:
+            return f"😶Okay, I've told {self.AGENT_LABEL} to stop."
+        return STOPPED_NOTICE
+
+    def _busy_notice(self) -> str:
+        if self.lang == language.EN:
+            return (f"😶{self.AGENT_LABEL}'s still working on the last job — I'll let you know when it's done. "
+                    "Say stop to cancel it.")
+        return BUSY_NOTICE
+
+    def _background_notice(self) -> str:
+        if self.lang == language.EN:
+            return "This one will take a while — I'll stop waiting and tell you when it's done."
+        return BACKGROUND_NOTICE
 
     def _start_loop(self) -> None:
         self._loop = asyncio.new_event_loop()
@@ -406,13 +447,21 @@ class LLMProvider(LLMProviderBase):
         """后台这一轮结束后要念给用户的话。"""
         if turn.cancelled:
             return ""
+        label = self.AGENT_LABEL
+        en = self.lang == language.EN
         if turn.stop_kind == ErrorKind.STALLED:
-            return "Claude 刚才那件事一直没有回应，我让它停下了。想接着做，跟我说继续就行。"
+            return (f"{label} stopped responding to that job, so I had it stop. Say continue to pick it up."
+                    if en else "Claude 刚才那件事一直没有回应，我让它停下了。想接着做，跟我说继续就行。")
         if turn.stop_kind == ErrorKind.TIMEOUT:
-            return "Claude 刚才那件事做了太久，我让它停下了。想接着做，跟我说继续就行。"
+            return (f"{label} took too long with that job, so I had it stop. Say continue to pick it up."
+                    if en else "Claude 刚才那件事做了太久，我让它停下了。想接着做，跟我说继续就行。")
         body = textUtils.check_emoji("".join(turn.texts)).strip().lstrip("。")  # 汇报时不需要换表情
         if turn.error is not None and not body:
+            if en:
+                return f"{label} didn't finish that job: {self._voice_error(turn.error.kind)}"
             return f"Claude 刚才那件事没做完：{turn.error.voice_message}"
+        if en:
+            return f"{label}'s done: {body}" if body else f"{label}'s done."
         return f"Claude 做完了：{body}" if body else "Claude 做完了。"
 
     async def _finish_background(self, st: ConnState, turn: Turn) -> None:
@@ -434,16 +483,16 @@ class LLMProvider(LLMProviderBase):
             bg = self._background.get(st.key)
         if bg is None or bg.finished:
             return False
-        if match_stop(text):
+        if match_stop(text, self.lang):
             bg.cancelled = True
             logger.bind(tag=TAG).info(f"用户让后台的 {self.AGENT_LABEL} 停下，设备 {st.key}")
             if bg.agent is not None:
                 await bg.agent.interrupt()
             asyncio.ensure_future(self._abandon_if_stuck(bg.st, bg.gen))
-            out.put(TextDelta(STOPPED_NOTICE))
+            out.put(TextDelta(self._stopped_notice()))
         else:
             logger.bind(tag=TAG).info(f"{self.AGENT_LABEL} 还在后台做上一件事，这句话不发：{text[:40]}")
-            out.put(TextDelta(BUSY_NOTICE))
+            out.put(TextDelta(self._busy_notice()))
         out.put(Done())
         return True
 
@@ -635,8 +684,12 @@ class LLMProvider(LLMProviderBase):
                         last_spoken_at, tail = time.time(), self.filler[-1]
                         yield f"😶{self.filler}"
                     elif self._progress_due(last_spoken_at, tail, first_at is not None or filler_sent, progress_count):
-                        text = self.progress_reply if progress_count == 0 else \
-                            f"{self.progress_prefix}，已经 {elapsed_text(time.time() - t0)}了。"
+                        if self.lang == language.EN:
+                            text = self.progress_reply if progress_count == 0 else \
+                                f"{self.progress_prefix} — {elapsed_text(time.time() - t0, 'en')} so far."
+                        else:
+                            text = self.progress_reply if progress_count == 0 else \
+                                f"{self.progress_prefix}，已经 {elapsed_text(time.time() - t0)}了。"
                         notice = self._before_notice(tail, first_at is not None or filler_sent) + text
                         progress_count += 1
                         last_spoken_at, tail = time.time(), text[-1]
@@ -644,7 +697,7 @@ class LLMProvider(LLMProviderBase):
                     stalled = not tools_running and time.time() - last_event_at >= self.stall_timeout
                     if elapsed >= self.turn_timeout and not stalled and self._let_go(st, "单轮超时"):
                         # Claude 还在正常干活：不中断，转后台，做完进待汇报
-                        yield self._before_notice(tail, first_at is not None or filler_sent) + BACKGROUND_NOTICE
+                        yield self._before_notice(tail, first_at is not None or filler_sent) + self._background_notice()
                         finished = True
                         return
                     if elapsed >= self.turn_timeout or stalled:

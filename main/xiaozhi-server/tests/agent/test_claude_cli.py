@@ -296,6 +296,13 @@ def test_wants_resume():
     assert match_resume("嗯，接着上次聊吧！") is not None
     assert match_resume("我们 继续刚才的话题") is not None
     assert match_resume("上次那个文件在哪") is None
+    # [xiaozhi-hub] 英文默认关键字（language=en 时 DEFAULT_RESUME_KEYWORDS 双语）
+    assert match_resume("okay, continue from last time") == ""
+    assert match_resume("alright so lets continue from last time") == ""
+    assert match_resume("let's pick up where we left off") == ""
+    assert match_resume("don't continue from last time") is None
+    rest = match_resume("continue where we left off and fix the tests")
+    assert rest and "fix" in rest
 
 
 # ---------- provider ----------
@@ -376,7 +383,8 @@ def stop_provider(p) -> None:
 def provider(tmp_path, monkeypatch):
     FakeAgent.instances, FakeAgent.script, FakeAgent.start_error, FakeAgent.delay = [], [], None, 0.0
     monkeypatch.setattr(provider_mod, "ClaudeSession", FakeAgent)
-    p = provider_mod.LLMProvider({"cli_path": str(tmp_path / "no-claude"), "workdir": str(tmp_path / "ws"),
+    p = provider_mod.LLMProvider({"language": "zh",  # 本文件话术断言按中文（fork 默认 en，测试里显式钉 zh）
+                                             "cli_path": str(tmp_path / "no-claude"), "workdir": str(tmp_path / "ws"),
                                   "filler_delay_seconds": 0.3, "turn_timeout_seconds": 2})
     p.store = SessionStore(tmp_path / "sessions.json", "claude_cli")
     yield p
@@ -405,7 +413,8 @@ def wait_turn_done(p, c, timeout=3.0):
 
 def test_effort_defaults_to_low(provider, tmp_path):
     assert provider.session_config.effort == "low"
-    p = provider_mod.LLMProvider({"cli_path": str(tmp_path / "x"), "workdir": str(tmp_path / "w"), "effort": ""})
+    p = provider_mod.LLMProvider({"language": "zh",  # 本文件话术断言按中文（fork 默认 en，测试里显式钉 zh）
+                                             "cli_path": str(tmp_path / "x"), "workdir": str(tmp_path / "w"), "effort": ""})
     assert p.session_config.effort is None  # 留空表示用 Claude Code 默认值
     stop_provider(p)
 
@@ -679,7 +688,8 @@ def test_progress_gap_grows_and_elapsed_text(provider, tmp_path):
     provider.progress_interval = 30
     assert [provider._progress_gap(n) for n in range(5)] == [30, 60, 120, 120, 120]
     assert [provider_mod.elapsed_text(s) for s in (12, 60, 95, 185, 599)] == ["12 秒", "1 分钟", "1 分半", "3 分钟", "9 分半"]
-    p = provider_mod.LLMProvider({"cli_path": str(tmp_path / "x"), "workdir": str(tmp_path / "w"), "progress_reply": "稍等哈"})
+    p = provider_mod.LLMProvider({"language": "zh",  # 本文件话术断言按中文（fork 默认 en，测试里显式钉 zh）
+                                             "cli_path": str(tmp_path / "x"), "workdir": str(tmp_path / "w"), "progress_reply": "稍等哈"})
     assert p.progress_reply == "稍等哈。" and p.progress_prefix == "稍等哈"  # 自定义了提示语，第二次起用它开头
     stop_provider(p)
 
@@ -858,7 +868,8 @@ def test_idle_timeout_closes_process(provider):
 # ---------- 全量审查后补充的回归测试 ----------
 
 def test_zero_values_are_respected(tmp_path):
-    p = provider_mod.LLMProvider({"cli_path": str(tmp_path / "x"), "workdir": str(tmp_path / "w"),
+    p = provider_mod.LLMProvider({"language": "zh",  # 本文件话术断言按中文（fork 默认 en，测试里显式钉 zh）
+                                             "cli_path": str(tmp_path / "x"), "workdir": str(tmp_path / "w"),
                                   "resume_window_minutes": 0, "filler_delay_seconds": 0,
                                   "stall_timeout_seconds": 0, "turn_timeout_seconds": 0})
     try:
@@ -1271,3 +1282,29 @@ def test_match_stop():
     from core.agent.voice_commands import match_stop
     assert all(match_stop(t) for t in ("停下", "停下吧。", "让它停下来", "别做了", "算了", "好的，取消"))
     assert not any(match_stop(t) for t in ("别停下", "停下来想想这个问题怎么做", "今天几号", ""))
+
+
+def test_match_stop_english():
+    from core.agent.voice_commands import match_stop
+    assert all(match_stop(t, "en") for t in ("stop", "Stop it.", "please cancel", "just stop it please",
+                                             "never mind", "halt"))
+    assert not any(match_stop(t, "en") for t in ("stop thinking about it", "don't stop", "what time is it", ""))
+
+
+def test_english_provider_phrases(tmp_path):
+    """language=en（fork 默认）：填充语、进度、后台播报和已用时间都是英文。"""
+    p = provider_mod.LLMProvider({"cli_path": str(tmp_path / "x"), "workdir": str(tmp_path / "w")})
+    try:
+        assert p.lang == "en"
+        assert p.filler == "Right let me have a look."
+        assert p.progress_reply == "Still working on it." and p.progress_prefix == "Still working on it"
+        assert p._background_notice().startswith("This one will take a while")
+        assert p._stopped_notice().startswith("😶Okay") and "Claude Code" in p._stopped_notice()
+        assert p._busy_notice().startswith("😶") and "still working" in p._busy_notice()
+        assert p._voice_error(ErrorKind.AUTH).startswith("Claude Code isn't signed in")
+        assert provider_mod.elapsed_text(95, "en") == "a minute and a half"
+        assert provider_mod.elapsed_text(60, "en") == "one minute"
+        assert provider_mod.elapsed_text(185, "en") == "3 minutes"
+        assert provider_mod.elapsed_text(12, "en") == "12 seconds"
+    finally:
+        stop_provider(p)

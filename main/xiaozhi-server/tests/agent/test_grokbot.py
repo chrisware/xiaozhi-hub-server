@@ -642,7 +642,7 @@ def provider(tmp_path, monkeypatch):
     FakeGrokAgent.instances, FakeGrokAgent.script, FakeGrokAgent.start_error, FakeGrokAgent.delay = [], [], None, 0.0
     monkeypatch.setattr(grok_mod, "GrokBotSession", FakeGrokAgent)
     monkeypatch.setattr(grok_mod, "get_hub", lambda *a, **k: SimpleNamespace(name="hub"))
-    p = grok_mod.LLMProvider({"bot_id": "bot-1", "bot_name": "孙悟空", "credentials_path": str(tmp_path / "c.json"),
+    p = grok_mod.LLMProvider({"language": "zh", "bot_id": "bot-1", "bot_name": "孙悟空", "credentials_path": str(tmp_path / "c.json"),
                               "filler_delay_seconds": 0.3, "turn_timeout_seconds": 3})
     p.store = SessionStore(tmp_path / "sessions.json", "grok_bot")
     return p
@@ -682,7 +682,7 @@ def test_provider_auth_error_has_grok_wording(provider):
 
 def test_provider_timeout_has_grok_wording(provider, tmp_path, monkeypatch):
     monkeypatch.setattr(grok_mod, "get_hub", lambda *a, **k: None)
-    p = grok_mod.LLMProvider({"bot_id": "bot-1", "bot_name": "孙悟空", "credentials_path": str(tmp_path / "c.json"),
+    p = grok_mod.LLMProvider({"language": "zh", "bot_id": "bot-1", "bot_name": "孙悟空", "credentials_path": str(tmp_path / "c.json"),
                               "turn_timeout_seconds": 0.3, "first_reply_filler": ""})
     p.store = SessionStore(tmp_path / "s2.json", "grok_bot")
     FakeGrokAgent.script = [[Activity("agent", tools_running=1), 2.0]]
@@ -699,14 +699,14 @@ def test_provider_timeout_has_grok_wording(provider, tmp_path, monkeypatch):
 
 
 def test_providers_share_one_loop(provider, tmp_path):
-    p2 = grok_mod.LLMProvider({"bot_id": "bot-2", "bot_name": "林黛玉", "credentials_path": str(tmp_path / "c.json")})
+    p2 = grok_mod.LLMProvider({"language": "zh", "bot_id": "bot-2", "bot_name": "林黛玉", "credentials_path": str(tmp_path / "c.json")})
     assert p2._loop is provider._loop and p2._loop.is_running()
     provider.shutdown()
     assert provider._loop.is_running()  # 共用的循环不随实例退役而停止
 
 
 def test_provider_self_check_without_login(tmp_path, monkeypatch, caplog):
-    p = grok_mod.LLMProvider({"bot_id": "", "bot_name": "x", "credentials_path": str(tmp_path / "c.json")})
+    p = grok_mod.LLMProvider({"language": "zh", "bot_id": "", "bot_name": "x", "credentials_path": str(tmp_path / "c.json")})
     assert p.bot_id == "" and p.model_name == "grok_bot:x"
 
 
@@ -794,7 +794,7 @@ async def test_hub_backs_off_a_minute_when_not_logged_in(cloud, tmp_path, monkey
 def test_provider_slow_start_is_not_a_stall(provider, tmp_path, monkeypatch):
     """云端电脑唤醒要几十秒：会话启动期间没有事件，不能被当成卡住。"""
     monkeypatch.setattr(grok_mod, "get_hub", lambda *a, **k: None)
-    p = grok_mod.LLMProvider({"bot_id": "bot-1", "bot_name": "孙悟空", "credentials_path": str(tmp_path / "c.json"),
+    p = grok_mod.LLMProvider({"language": "zh", "bot_id": "bot-1", "bot_name": "孙悟空", "credentials_path": str(tmp_path / "c.json"),
                               "stall_timeout_seconds": 0.3, "first_reply_filler": "", "turn_timeout_seconds": 5})
     p.store = SessionStore(tmp_path / "s3.json", "grok_bot")
 
@@ -958,9 +958,9 @@ async def test_voice_hint_appended_and_echo_by_content(cloud, hub):
 
 
 def test_provider_defaults_filler_delay_and_hint(provider):
-    p0 = grok_mod.LLMProvider({"bot_id": "b", "bot_name": "x"})
+    p0 = grok_mod.LLMProvider({"language": "zh", "bot_id": "b", "bot_name": "x"})
     assert p0.filler_delay == 6 and p0.session_config.voice_hint == grok_mod.DEFAULT_VOICE_HINT
-    p = grok_mod.LLMProvider({"bot_id": "b", "bot_name": "x", "voice_hint": "", "filler_delay_seconds": 1})
+    p = grok_mod.LLMProvider({"language": "zh", "bot_id": "b", "bot_name": "x", "voice_hint": "", "filler_delay_seconds": 1})
     assert p.session_config.voice_hint == "" and p.filler_delay == 1
 
 
@@ -1124,7 +1124,7 @@ def test_warm_up_then_idle_close_does_not_crash(tmp_path, monkeypatch):
     monkeypatch.setattr(grok_mod, "GrokBotSession", FakeGrokAgent)
     monkeypatch.setattr(grok_mod, "get_hub", lambda *a, **k: None)
     FakeGrokAgent.instances, FakeGrokAgent.script, FakeGrokAgent.start_error, FakeGrokAgent.delay = [], [], None, 0.0
-    p = grok_mod.LLMProvider({"bot_id": "bot-1", "bot_name": "孙悟空", "credentials_path": str(tmp_path / "c.json"),
+    p = grok_mod.LLMProvider({"language": "zh", "bot_id": "bot-1", "bot_name": "孙悟空", "credentials_path": str(tmp_path / "c.json"),
                               "idle_timeout_seconds": 0.3})
     p.store = SessionStore(tmp_path / "s4.json", "grok_bot")
     c = conn()
@@ -1147,7 +1147,7 @@ def slow_provider(tmp_path, monkeypatch, name):
         self.alive = True
 
     monkeypatch.setattr(FakeGrokAgent, "start", slow_start)
-    p = grok_mod.LLMProvider({"bot_id": "bot-1", "bot_name": "孙悟空", "credentials_path": str(tmp_path / "c.json"),
+    p = grok_mod.LLMProvider({"language": "zh", "bot_id": "bot-1", "bot_name": "孙悟空", "credentials_path": str(tmp_path / "c.json"),
                               "first_reply_filler": ""})
     p.store = SessionStore(tmp_path / name, "grok_bot")
     return p
@@ -1638,7 +1638,7 @@ def test_provider_stall_before_sending_says_send_failed(tmp_path, monkeypatch):
         yield Done()
 
     monkeypatch.setattr(FakeGrokAgent, "send", stuck_send)
-    p = grok_mod.LLMProvider({"bot_id": "bot-1", "bot_name": "孙悟空", "credentials_path": str(tmp_path / "c.json"),
+    p = grok_mod.LLMProvider({"language": "zh", "bot_id": "bot-1", "bot_name": "孙悟空", "credentials_path": str(tmp_path / "c.json"),
                               "stall_timeout_seconds": 0.3, "first_reply_filler": ""})
     p.store = SessionStore(tmp_path / "s7.json", "grok_bot")
     c = conn()

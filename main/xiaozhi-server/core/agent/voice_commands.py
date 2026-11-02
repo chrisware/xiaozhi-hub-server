@@ -2,16 +2,20 @@
 
 import re
 
-DEFAULT_RESUME_KEYWORDS = ["接着上次聊", "继续上次的话题", "继续刚才的话题", "接着刚才聊"]
+# [xiaozhi-hub] 双语接续关键字：英文短语不会误命中中文（反之亦然），一条列表两边都走
+DEFAULT_RESUME_KEYWORDS = ["接着上次聊", "继续上次的话题", "继续刚才的话题", "接着刚才聊",
+                           "continue from last time", "continue where we left off",
+                           "pick up where we left off", "carry on from before"]
 
 _STRIP = re.compile(r"[\s，。！？、,.!?；;：:~～\"'“”‘’…]+")
 
 
 def normalize(text: str) -> str:
-    return _STRIP.sub("", text or "")
+    return _STRIP.sub("", text or "").lower()
 
 
-NEGATIONS = ("不要", "不用", "别", "不想", "不必", "甭")
+# [xiaozhi-hub] 归一化去掉所有空白和标点，英文否定词写成去空格形式（"dont continue…"）
+NEGATIONS = ("不要", "不用", "别", "不想", "不必", "甭", "dont", "donot", "not", "never")
 
 
 # 关键字至少这么长时，允许错 1 个字：语音识别常把个别字认错（实测"接着上次聊"被识别成"接着上次量"）
@@ -26,9 +30,15 @@ def _negated(t: str, start: int) -> bool:
     return any(t[:start].endswith(n) for n in NEGATIONS)
 
 
+_EN_FILLER_RUN = re.compile(r"(?:okay|ok+|k|alright|so|well|then|please|um+|uh+|erm+|emm+|hmm+|yeah|yes|let|s|us|ca|n|you|could|would|now|and)+")
+
+
 def _remainder(t: str, start: int, end: int) -> str:
     """关键字以外的内容（去掉首尾语气词）。只剩 1 个字以内时视为没有，比如"接着上次聊嘛"。"""
     rest = _LEADING_FILLERS.sub("", t[:start]) + _TRAILING_FILLERS.sub("", t[end:])
+    # [xiaozhi-hub] 英文：normalize 已去掉空格，无法按词边界剥前缀；整段只是填充词时视为没有
+    if len(rest) > 1 and _EN_FILLER_RUN.fullmatch(rest):
+        return ""
     return rest if len(rest) > 1 else ""
 
 
@@ -60,10 +70,20 @@ def match_resume(text: str, keywords=None):
 
 # 让后台在做的事停下：整句话基本就是这条指令时才算（"别停下"这类带否定的不算）
 STOP_WORDS = ("停下", "停下来", "停止", "停", "别做了", "不用做了", "不做了", "不要做了", "取消", "算了", "停掉")
+# [xiaozhi-hub] 英文停用词：标点去掉、空白压缩后整句等于其中之一才算（"stop it please" 之类也认）
+STOP_WORDS_EN = ("stop", "stop it", "stop that", "cancel", "cancel that", "halt", "quit",
+                 "never mind", "enough", "shut it down")
 _STOP_PREFIX = re.compile(r"^(?:让它|叫它|你|给我|先|赶紧|快)+")
+_STOP_PREFIX_EN = re.compile(r"^(?:please\s+|just\s+|can\s+you\s+)+")
+_STOP_SUFFIX_EN = re.compile(r"(?:\s+(?:please|now|claude|it))+$")
 
 
-def match_stop(text: str) -> bool:
+def match_stop(text: str, lang: str = "zh") -> bool:
+    if lang == "en":
+        core = re.sub(r"\s+", " ", re.sub(r"[^\w\s]", "", text or "")).strip().lower()
+        core = _STOP_PREFIX_EN.sub("", core)
+        core = _STOP_SUFFIX_EN.sub("", core)
+        return core in STOP_WORDS_EN
     core = _STOP_PREFIX.sub("", _LEADING_FILLERS.sub("", normalize(text)))
     # "算了""别做了"本身以语气词结尾：去掉结尾语气词前后各比一次
     return core in STOP_WORDS or _TRAILING_FILLERS.sub("", core) in STOP_WORDS
