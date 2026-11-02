@@ -61,6 +61,21 @@ listens, speaks      recognizes, routes by name, synthesizes      thinks and doe
 
 - Set up LLMs and API keys, Claude Code permissions, call names, plugins, hotwords and corrections, and the TTS voice in a web page; see online devices and environment checks.
 
+## Language
+
+English is the default in this fork; Chinese stays fully available. One setting — `language: en` (or `zh`) in `data/.config.yaml` — drives everything the hub speaks or prompts:
+
+- The LLM reply language (`{{language}}` in the system prompt), the persona, and the system-prompt time lines (English weekday; the lunar-date line is dropped).
+- Canned replies: errors, the "I'm here" call-name reply, the idle goodbye, the chat-history clear confirmation ("clear my chat history" → "yes"), Claude Code/Grok Bot fillers ("Right, let me have a look", "Still working on it") and progress notices, and the spoken timeout/auth/error messages.
+- Voice commands: `exit`, `goodbye`, `stop listening` end a session; `stop`, `cancel`, `never mind` halt background work; resume keywords include "continue from last time".
+- The default TTS voice becomes `en-NZ-MollyNeural` (New Zealand English); English voices are listed in the admin console.
+
+Anything you set yourself in `data/.config.yaml` wins over the language defaults — e.g. pin `voice: zh-CN-XiaoxiaoNeural` under `TTS.EdgeTTS` and it stays even with `language: en`.
+
+Speech recognition for English needs no extra download: the default **X-ASR** model (`SherpaXASR`, installed by the installer, ~175 MB, runs offline in ~0.5 GB RAM) is a Chinese-English mixed transducer and transcribes English directly, with punctuation and hotwords. It was chosen over SenseVoice (`FunASR`, worse mixed zh/en accuracy and a 2 GB memory gate on this device) and Vosk-small-en (no punctuation). If you want better English accuracy and don't mind the cloud, switch `selected_module.ASR` to `GroqASR` (`whisper-large-v3-turbo`) or `OpenaiASR` — both already exist; add your API key in the admin console. English speech quality on the ThinkSmart mic array still needs a real-device check.
+
+Streaming replies now cut at English periods too (`"The weather is fine. It's 21 degrees."` becomes two speakable segments), so first audio arrives sooner; decimals (`3.5`) and ellipses are never cut.
+
 ## Quick start
 
 Before you begin: the computer and the device must be on the same LAN, and git must be installed. To use Claude Code, install it and run `claude` once in a terminal to sign in; without it, the installer uses the Claude API instead, and you fill in the API key in the admin console.
