@@ -60,6 +60,7 @@ listens, speaks      recognizes, routes by name, synthesizes      thinks and doe
 **Admin console**
 
 - Set up LLMs and API keys, Claude Code permissions, call names, plugins, hotwords and corrections, and the TTS voice in a web page; see online devices and environment checks.
+- Tick **Web search** on the Intent page and paste an API key (DeepSeek or any Anthropic-protocol endpoint) and the assistant can look things up online. The **Settings** dialog next to it tests the key and says exactly what is wrong when a search fails.
 
 ## Language
 
@@ -68,6 +69,7 @@ English is the default in this fork; Chinese stays fully available. One setting 
 - The LLM reply language (`{{language}}` in the system prompt), the persona, and the system-prompt time lines (English weekday; the lunar-date line is dropped).
 - Canned replies: errors, the "I'm here" call-name reply, the idle goodbye, the chat-history clear confirmation ("clear my chat history" → "yes"), Claude Code/Grok Bot fillers ("Right, let me have a look", "Still working on it") and progress notices, and the spoken timeout/auth/error messages.
 - Voice commands: `exit`, `goodbye`, `stop listening` end a session; `stop`, `cancel`, `never mind` halt background work; resume keywords include "continue from last time".
+- Web search: its tool description, search prompt, summary instruction and all error messages follow the setting, in English or Chinese.
 - The default TTS voice becomes `en-NZ-MollyNeural` (New Zealand English); English voices are listed in the admin console.
 
 Anything you set yourself in `data/.config.yaml` wins over the language defaults — e.g. pin `voice: zh-CN-XiaoxiaoNeural` under `TTS.EdgeTTS` and it stays even with `language: en`.
