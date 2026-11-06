@@ -14,15 +14,17 @@
 import asyncio
 import copy
 import functools
+import io
 import json
 import time
+import wave
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from aiohttp import web
 
 from config.logger import setup_logging
-from core.admin import auth, catalog, config_store, connections, pages, pipeline, updater
+from core.admin import auth, catalog, config_store, connections, pages, pipeline, plugin_settings, updater
 from core.admin.grokbot import GrokBotAdmin
 from core.admin.status import _claude_version, collect_status
 from core.agent import chat_history, llm_router, reports
@@ -54,6 +56,19 @@ SECURITY_HEADERS = {
 }
 EMOTION_EMOJI = {name: emoji for emoji, name in EMOJI_MAP.items()}
 KIOSK_ASR_MAX_BYTES = 16000 * 2 * 10  # /kiosk/asr 最多 10 秒音频
+KIOSK_TTS_MAX_CHARS = 200  # /kiosk/tts 一次最多合成这么多字（提醒的内容，一两句话）
+KIOSK_TTS_RATE = 24000     # /kiosk/tts 返回的采样率：Edge TTS 原本就是 24 kHz
+
+
+def _wav(pcm: bytes, rate: int) -> bytes:
+    """16 位单声道 PCM 加上 WAV 文件头。"""
+    out = io.BytesIO()
+    with wave.open(out, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(pcm)
+    return out.getvalue()
 
 
 class AdminHandler:
@@ -113,6 +128,9 @@ class AdminHandler:
                 web.post("/admin/api/intent", self.handle_intent_save),
                 web.get("/admin/api/general", self.handle_general),
                 web.post("/admin/api/general", self.handle_general_save),
+                web.get("/admin/api/plugin-settings/{id}", self.handle_plugin_settings),
+                web.post("/admin/api/plugin-settings/{id}", self.handle_plugin_settings_save),
+                web.post("/admin/api/plugin-settings/{id}/test", self.handle_plugin_settings_test),
                 web.get("/admin/api/call-names", self.handle_call_names),
                 web.post("/admin/api/call-names", self.handle_call_names_save),
                 web.post("/admin/api/call-names/learn", self.handle_call_names_learn),
@@ -127,6 +145,7 @@ class AdminHandler:
                 web.post("/kiosk/llm/use", self.handle_kiosk_llm_use),
                 web.post("/kiosk/reports", self.handle_kiosk_reports),
                 web.post("/kiosk/asr", self.handle_kiosk_asr),
+                web.post("/kiosk/tts", self.handle_kiosk_tts),
                 web.get("/kiosk/chat/history", self.handle_kiosk_chat_history),
                 web.post("/kiosk/chat/clear", self.handle_kiosk_chat_clear),
             ]
@@ -829,6 +848,39 @@ class AdminHandler:
         text = await self._blocking(asr.recognize_pcm, pcm)
         return self._json({"ok": True, "text": text, "ms": round((time.monotonic() - started) * 1000)})
 
+    async def handle_kiosk_tts(self, request: web.Request):
+        """{"text"}：只合成、不对话，返回 16 位单声道 WAV（24 kHz）。
+
+        用运行中配置选的语音合成和音色（和设备听到的回复一样）。设备客户端设提醒时用它把要念的话预先合成好
+        存在本机，到点直接播，不再依赖网关。流式合成（没有整句合成）返回 501，客户端到点只响铃、屏幕显示文字。"""
+        if not self._from_this_machine(request):
+            return self._error("仅限本机", 403)
+        body = await self._read_json(request)
+        text = str(body.get("text") or "").strip()
+        if not text or len(text) > KIOSK_TTS_MAX_CHARS:
+            return self._error(f"text 要 1 到 {KIOSK_TTS_MAX_CHARS} 个字", 400)
+        started = time.monotonic()
+        try:
+            pcm = await self._blocking(self._synthesize, text)
+        except NotImplementedError:
+            return self._error("当前语音合成不支持整句合成", 501)
+        except Exception as e:
+            self.logger.bind(tag=TAG).warning(f"/kiosk/tts 合成失败: {e}")
+            pcm = None
+        if not pcm:
+            return self._error("合成失败，请检查语音合成服务能否访问", 502)
+        self.logger.bind(tag=TAG).info(f"/kiosk/tts 合成 {len(text)} 字，用时 {time.monotonic() - started:.1f}s")
+        return web.Response(body=_wav(pcm, KIOSK_TTS_RATE), content_type="audio/wav", headers=SECURITY_HEADERS)
+
+    def _synthesize(self, text: str) -> bytes:
+        from core.providers.tts.dto.dto import InterfaceType
+        from core.utils.modules_initialize import initialize_tts
+
+        tts = initialize_tts(self.config)
+        if tts.interface_type != InterfaceType.NON_STREAM:
+            raise NotImplementedError
+        return tts.synthesize_pcm(text, KIOSK_TTS_RATE)
+
     async def handle_kiosk_chat_history(self, request: web.Request):
         """?device=<device-id>[&limit=N]：这台设备存下来的聊天记录，给屏幕显示。
 
@@ -1102,6 +1154,44 @@ class AdminHandler:
             result["note"] = notes[-1]
         return self._json(result)
 
+    # ---------- 插件设置 ----------
+
+    async def handle_plugin_settings(self, request: web.Request):
+        self._require_login(request)
+        merged = await self._blocking(self._merged)
+        try:
+            return self._json({"ok": True, **plugin_settings.describe(merged, request.match_info["id"])})
+        except KeyError:
+            return self._error(language.msg(merged, "No such plugin settings", "没有这个插件设置"), 404)
+
+    async def handle_plugin_settings_save(self, request: web.Request):
+        """保存后马上同步进运行中的配置和每个在线连接：插件每次调用都读 conn.config，不用重连。"""
+        self._require_login(request)
+        settings_id = request.match_info["id"]
+        body = await self._read_json(request)
+        try:
+            merged = await self._blocking(self._merged)
+            changed = await self._blocking(plugin_settings.save, settings_id, body, merged, self.config_path)
+            key = plugin_settings.config_key(settings_id)
+        except KeyError:
+            return self._error(language.msg(merged, "No such plugin settings", "没有这个插件设置"), 404)
+        except ValueError as e:
+            return self._error(str(e), 400)
+        if not changed:
+            return self._json({"ok": True, "changed": [],
+                               "note": language.msg(merged, "Nothing changed", "没有修改"),
+                               "configured": plugin_settings.configured(merged, settings_id)})
+        merged = await self._blocking(self._merged)
+        fresh = (merged.get("plugins") or {}).get(key) or {}
+        self.config.setdefault("plugins", {})[key] = copy.deepcopy(fresh)
+        for conn in connections.all_connections():
+            if isinstance(getattr(conn, "config", None), dict):
+                conn.config.setdefault("plugins", {})[key] = copy.deepcopy(fresh)
+        self.logger.bind(tag=TAG).info(f"管理后台更新了插件设置 {settings_id}: {', '.join(changed)}")
+        return self._json({"ok": True, "changed": changed,
+                           "note": language.msg(merged, "Saved — it takes effect right away", "已保存，马上生效"),
+                           "configured": plugin_settings.configured(merged, settings_id)})
+
     # ---------- 界面语言 ----------
 
     async def handle_general(self, request: web.Request):
@@ -1128,6 +1218,18 @@ class AdminHandler:
                                                          "page to refresh its language",
                                                 "已保存，提示文字马上生效；页面语言重新打开后刷新")
                            if changed else language.msg(merged, "Nothing changed", "没有修改")})
+
+    async def handle_plugin_settings_test(self, request: web.Request):
+        self._require_login(request)
+        body = await self._read_json(request)
+        try:
+            merged = await self._blocking(self._merged)
+            result = await plugin_settings.run_test(request.match_info["id"], body, merged)
+        except KeyError:
+            return self._error(language.msg(merged, "This plugin has no test", "这个插件没有测试"), 404)
+        except ValueError as e:
+            return self._error(str(e), 400)
+        return self._json({"ok": True, **result})
 
     # ---------- 在线设备与表情测试 ----------
 

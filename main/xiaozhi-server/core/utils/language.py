@@ -52,6 +52,11 @@ EN_DEFAULTS: dict[tuple, object] = {
         "Summarise how quantum computing works in about 100 words",
     ],
     ("TTS", "EdgeTTS", "voice"): "en-NZ-MollyNeural",
+    # 工具描述走 config 覆盖通道（plugin_executor._get_plugin_description）
+    ("plugins", "web_search", "description"): (
+        "Web search. Use it when the user asks about live information, recent events, news, prices, scores, "
+        "or anything you are unsure about and should verify."
+    ),
 }
 
 # Per agent-type defaults, applied to every LLM entry of that type whose key the user

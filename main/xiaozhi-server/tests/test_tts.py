@@ -108,9 +108,13 @@ def test_tts_text_to_speak_writes_file() -> None:
 
     out_file = provider.generate_filename()
     try:
+        # 默认声音跟语言走：英文音色念不了中文，反之也一样
+        voice = str(getattr(provider, "voice", "") or "")
+        text = "测试一下" if "zh-" in voice else "Hello, this is a test."
+
         async def run():
             await asyncio.wait_for(
-                provider.text_to_speak("测试一下", out_file),
+                provider.text_to_speak(text, out_file),
                 timeout=10.0,
             )
 

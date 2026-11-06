@@ -128,27 +128,80 @@ def voice_sample(group: str) -> str:
 # ---------- 意图识别：插件 ----------
 # 原项目总会加载"退出对话"和"查日期"，不需要勾选
 ALWAYS_ON_PLUGINS = [
-    {"name": "handle_exit_intent", "label": "退出对话", "desc": "说“再见”“退下吧”时结束对话"},
-    {"name": "get_lunar", "label": "查日期", "desc": "今天几号、星期几、农历和节气"},
+    {"name": "handle_exit_intent", "label": "退出对话", "desc": "说“再见”“退下吧”时结束对话",
+     "label_en": "Leave the chat", "desc_en": 'Ends the conversation when you say goodbye or "stop listening"'},
+    {"name": "get_lunar", "label": "查日期", "desc": "今天几号、星期几、农历和节气",
+     "label_en": "Date and calendar", "desc_en": "Today's date, the weekday, the lunar calendar and solar terms"},
 ]
 PLUGINS = [
-    {"name": "get_weather", "label": "查天气", "desc": "实时天气和预报（使用项目共用的天气 Key，用多了可能被限制）"},
-    {"name": "get_news_from_newsnow", "label": "热点新闻", "desc": "澎湃新闻、百度热搜、财联社等热榜"},
-    {"name": "get_news_from_chinanews", "label": "中新网新闻", "desc": "中国新闻网的社会、国际、财经新闻"},
-    {"name": "play_music", "label": "放音乐", "desc": "播放电脑上 music 目录里的歌曲"},
-    {"name": "web_search", "label": "联网搜索", "desc": "需要在配置文件的 plugins.web_search 里填写搜索服务的 Key（秘塔、Tavily 等）",
-     "config": "web_search"},
-    {"name": "change_role", "label": "切换角色", "desc": "换人设和说话风格"},
+    {"name": "get_weather", "label": "查天气", "desc": "实时天气和预报（使用项目共用的天气 Key，用多了可能被限制）",
+     "label_en": "Weather", "desc_en": "Live weather and forecasts (a shared project weather key; heavy use can hit limits)"},
+    {"name": "get_news_from_newsnow", "label": "热点新闻", "desc": "澎湃新闻、百度热搜、财联社等热榜",
+     "label_en": "Trending news", "desc_en": "Hot lists from The Paper, Baidu hot search, Cailianshe and more"},
+    {"name": "get_news_from_chinanews", "label": "中新网新闻", "desc": "中国新闻网的社会、国际、财经新闻",
+     "label_en": "Chinanews", "desc_en": "Society, world and business news from China News Service"},
+    {"name": "play_music", "label": "放音乐", "desc": "播放电脑上 music 目录里的歌曲",
+     "label_en": "Play music", "desc_en": "Plays songs from the music folder on the computer"},
+    {"name": "web_search", "label": "联网搜索", "desc": "用 Anthropic 协议接口自带的搜索查实时信息，点「设置」填接口和 Key",
+     "label_en": "Web search", "desc_en": "Real-time answers through the built-in search of an Anthropic-protocol "
+                                           "endpoint; press Settings to fill in the URL and key",
+     "config": "web_search", "settings": "web_search"},
+    {"name": "change_role", "label": "切换角色", "desc": "换人设和说话风格",
+     "label_en": "Change role", "desc_en": "Switches the persona and speaking style"},
     {"name": "hass_get_state", "label": "查智能家居状态", "desc": "需要在配置文件的 plugins.home_assistant 里填写地址和令牌",
+     "label_en": "Smart-home status", "desc_en": "Needs the URL and token in plugins.home_assistant of the config file",
      "config": "home_assistant"},
     {"name": "hass_set_state", "label": "控制智能家居", "desc": "需要在配置文件的 plugins.home_assistant 里填写地址和令牌",
+     "label_en": "Smart-home control", "desc_en": "Needs the URL and token in plugins.home_assistant of the config file",
      "config": "home_assistant"},
     {"name": "hass_play_music", "label": "智能音箱放歌", "desc": "需要在配置文件的 plugins.home_assistant 里填写地址和令牌",
+     "label_en": "Smart-speaker music", "desc_en": "Needs the URL and token in plugins.home_assistant of the config file",
      "config": "home_assistant"},
     {"name": "search_from_ragflow", "label": "查知识库", "desc": "需要在配置文件的 plugins.search_from_ragflow 里填写 RAGFlow 地址和 Key",
+     "label_en": "Knowledge base", "desc_en": "Needs the RAGFlow URL and key in plugins.search_from_ragflow of the config file",
      "config": "search_from_ragflow"},
 ]
 PLUGIN_NAMES = {p["name"] for p in PLUGINS}
+
+# 插件设置（后台插件旁边的「设置」）：按字段清单自动生成表单，值存在 plugins.<config> 下。
+# PLUGINS 条目加 "settings": <id> 指向这里。每份设置 {"note": 整体说明, "fields": [...]}，字段：
+#   key、label；type：text / secret（只写不读，留空表示不改）/ number（可带 min、max）；
+#   required：没填时插件显示"还没配置"（不写就是选填）；default：留空时实际用的值，页面上当占位提示；
+#   hint：字段旁边的说明文字。
+# legacy_keys：旧版插件才有的字段，配置里还有它们时，已保存的密钥当成没填（是给别的服务的），
+#   保存时删掉这些字段并清掉旧密钥；legacy_note 是页面上的提示。
+# 要有「测试」按钮，在 core/admin/plugin_settings.py 的 TESTS 里登记测试函数。
+PLUGIN_SETTINGS = {
+    "web_search": {
+        "note": "需要 Anthropic 协议、支持自带搜索（web_search）的接口，比如 DeepSeek、Anthropic 官方。"
+                "聊天模型用哪家都可以，和这里无关。注意：网关装在设备上时，127.0.0.1 指设备自己。",
+        "note_en": "Needs an Anthropic-protocol endpoint with built-in web search — DeepSeek or the official "
+                   "Anthropic API, for example. It has nothing to do with which chat model answers. Note: when "
+                   "the gateway runs on the device, 127.0.0.1 means the device itself.",
+        "fields": [
+            {"key": "base_url", "label": "接口地址", "type": "text", "default": "https://api.deepseek.com/anthropic/v1",
+             "label_en": "Endpoint URL",
+             "hint": "写到 /anthropic 或 /anthropic/v1 都可以；Anthropic 官方填 https://api.anthropic.com",
+             "hint_en": "Either /anthropic or /anthropic/v1 works; the official API is https://api.anthropic.com"},
+            {"key": "api_key", "label": "API Key", "type": "secret", "required": True},
+            {"key": "model", "label": "模型", "type": "text", "default": "deepseek-v4-flash",
+             "label_en": "Model",
+             "hint": "用来搜索和总结的模型，比如 deepseek-v4-flash、claude-haiku-5-5",
+             "hint_en": "The model that searches and summarises, like deepseek-v4-flash or claude-haiku-5-5"},
+            {"key": "max_uses", "label": "单次最多搜索次数", "type": "number", "default": 5, "min": 1, "max": 10,
+             "label_en": "Max searches per question",
+             "hint": "一个问题里模型最多搜几轮；越多越全，也越慢",
+             "hint_en": "How many rounds the model may search for one question; more is more thorough, and slower"},
+        ],
+        # 旧版联网搜索（秘塔、Tavily、Serply）的字段：那时的 Key 不能发给新接口
+        "legacy_keys": ["provider", "max_results"],
+        "legacy_note": "配置里还留着旧版联网搜索（秘塔、Tavily、Serply）的设置，那时填的 Key 不能用在新接口上，"
+                       "新版不会使用它。请重新填写 API Key 并保存，旧设置会一起清掉。",
+        "legacy_note_en": "The config still holds settings from the old web search (metaso, Tavily, Serply). Keys "
+                          "filled in back then can't be used against the new endpoint and the new version ignores "
+                          "them. Enter a new API Key and save — the old settings are cleared at the same time.",
+    },
+}
 INTENT_MODES = ("nointent", "function_call")
 
 # ---------- 界面语言 ----------
