@@ -275,7 +275,7 @@ async def test_general_language_round_trip(client, cfg_path):
     r = await (await client.post("/admin/api/general", json={"language": "zh"})).json()
     assert r["changed"] == ["language"] and "已经在使用" not in r["note"]
     m = merged(cfg_path)
-    assert "你是" in m["prompt"] and m["TTS"]["EdgeTTS"]["voice"] == "zh-CN-XiaoxiaoNeural"
+    assert "你叫小麦" in m["prompt"] and m["TTS"]["EdgeTTS"]["voice"] == "zh-CN-XiaoxiaoNeural"
     assert (await client.post("/admin/api/general", json={"language": "fr"})).status == 400
 
 

@@ -134,8 +134,9 @@ ALWAYS_ON_PLUGINS = [
      "label_en": "Date and calendar", "desc_en": "Today's date, the weekday, the lunar calendar and solar terms"},
 ]
 PLUGINS = [
-    {"name": "get_weather", "label": "查天气", "desc": "实时天气和预报（使用项目共用的天气 Key，用多了可能被限制）",
-     "label_en": "Weather", "desc_en": "Live weather and forecasts (a shared project weather key; heavy use can hit limits)"},
+    {"name": "get_weather", "label": "查天气", "desc": "现在的天气、7 天预报、会不会下雨、空气质量（Open-Meteo，免费、不用 Key）",
+     "label_en": "Weather", "desc_en": "Now, a 7-day forecast, rain or not, and air quality (Open-Meteo; free, no key)",
+     "config": "get_weather", "settings": "get_weather"},
     {"name": "get_news_from_newsnow", "label": "热点新闻", "desc": "澎湃新闻、百度热搜、财联社等热榜",
      "label_en": "Trending news", "desc_en": "Hot lists from The Paper, Baidu hot search, Cailianshe and more"},
     {"name": "get_news_from_chinanews", "label": "中新网新闻", "desc": "中国新闻网的社会、国际、财经新闻",
@@ -172,6 +173,19 @@ PLUGIN_NAMES = {p["name"] for p in PLUGINS}
 #   保存时删掉这些字段并清掉旧密钥；legacy_note 是页面上的提示。
 # 要有「测试」按钮，在 core/admin/plugin_settings.py 的 TESTS 里登记测试函数。
 PLUGIN_SETTINGS = {
+    "get_weather": {
+        "note": "天气来自 Open-Meteo，地名用 OpenStreetMap 查，都免费、不用 Key。"
+                "没说地点时查所在地的天气；所在地留空就按宽带的公网 IP 判断城市（只到城市，运营商出口在外地时会不准）。",
+        "note_en": "Weather comes from Open-Meteo and place names from OpenStreetMap — both free, no key needed. "
+                   "With no place named, the weather is for your area; leave Location blank and the city is "
+                   "guessed from your broadband's public IP (city only, and a carrier exit point elsewhere can "
+                   "get it wrong).",
+        "fields": [
+            {"key": "location", "label": "所在地", "label_en": "Location",
+             "hint": "可以写到区县，例如 深圳南山区、杭州西湖区；留空按 IP 自动判断",
+             "hint_en": "A district is fine, e.g. Nanshan, Shenzhen; blank means auto-detect by IP", "type": "text"},
+        ],
+    },
     "web_search": {
         "note": "需要 Anthropic 协议、支持自带搜索（web_search）的接口，比如 DeepSeek、Anthropic 官方。"
                 "聊天模型用哪家都可以，和这里无关。注意：网关装在设备上时，127.0.0.1 指设备自己。",

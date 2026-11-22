@@ -642,7 +642,8 @@ const STR = {
     ps_unset: "Not set — paste it here and save",
     ps_default: (v) => `Blank uses the default: ${v}`,
     ps_secret_note: "Keys are stored only in the gateway config file; the page shows just the first and " +
-                    "last 4 characters. Saving takes effect right away, no restart needed.",
+                    "last 4 characters. ",
+    ps_save_now: "Saving takes effect right away, no restart needed.",
     ps_close: "Collapse", ps_test: "Test", ps_save: "Save settings",
     ps_testing: "Running one real search, up to 30 seconds…",
     ps_test_ok: (count, seconds, first) => `${count} results in ${seconds}s. First: ${first}`,
@@ -1073,7 +1074,8 @@ const STR = {
     ps_set: (hint) => `已配置 ${hint}，留空表示不改`,
     ps_unset: "未配置，粘贴后保存",
     ps_default: (v) => `留空用默认：${v}`,
-    ps_secret_note: "密钥只保存在网关的配置文件里，页面上只显示首尾 4 位。保存后马上生效，不用重启。",
+    ps_secret_note: "密钥只保存在网关的配置文件里，页面上只显示首尾 4 位。",
+    ps_save_now: "保存后马上生效，不用重启。",
     ps_close: "收起", ps_test: "测试", ps_save: "保存设置",
     ps_testing: "正在真搜一次，最多等 30 秒…",
     ps_test_ok: (count, seconds, first) => `搜到 ${count} 条，用时 ${seconds} 秒。第一条：${first}`,
@@ -2207,7 +2209,7 @@ async function openPluginSettings(id, label, onSaved) {
     <div class="grid2">
       ${d.fields.map((f) => `<label class="f ${f.type === "text" ? "full" : ""}">${esc(f.label)}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ""}${input(f)}</label>`).join("")}
     </div>
-    <p class="muted small" style="margin:8px 0 0">${T("ps_secret_note")}</p>
+    <p class="muted small" style="margin:8px 0 0">${d.fields.some((f) => f.type === "secret") ? T("ps_secret_note") : ""}${T("ps_save_now")}</p>
     <div class="actions"><span class="result" id="ps-result"></span>
       <button class="btn" id="ps-close">${T("ps_close")}</button>
       ${d.testable ? `<button class="btn" id="ps-test">${T("ps_test")}</button>` : ""}
@@ -2223,7 +2225,7 @@ async function openPluginSettings(id, label, onSaved) {
     result(`<span class="muted">${T("ps_testing")}</span>`);
     try {
       const r = await api(`plugin-settings/${encodeURIComponent(id)}/test`, values());
-      result(`<span style="color:var(--ok)">✓ ${T("ps_test_ok", r.count, r.seconds, esc(r.first))}</span>`);
+      result(`<span style="color:var(--ok)">✓ ${r.message ? esc(r.message) : T("ps_test_ok", r.count, r.seconds, esc(r.first))}</span>`);
     } catch (err) { bad(err.message); }
   });
   $("ps-save").onclick = (e) => busy(e.target, async () => {
